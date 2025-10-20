@@ -134,14 +134,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
               <Calendar className="w-4 h-4 ml-2" />
               {t('احجز الآن', 'Book Now')}
             </Button>
-            <Button
-              onClick={handleCartToggle}
-              variant={inCart ? 'default' : 'outline'}
-              size="lg"
-              className={inCart ? 'bg-green-600 hover:bg-green-700' : ''}
-            >
-              {inCart ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-            </Button>
+          
           </div>
         </div>
       </Card>
