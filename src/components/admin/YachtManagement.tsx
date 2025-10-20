@@ -1,0 +1,425 @@
+import { useState, useEffect } from 'react';
+import { Yacht, YachtOption } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { yachtService } from '@/lib/storage';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Switch } from '@/components/ui/switch';
+
+interface YachtManagementProps {
+  yachts: Yacht[];
+  onUpdate: () => void;
+}
+
+export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
+  const { t } = useLanguage();
+  const [showForm, setShowForm] = useState(false);
+  const [editingYacht, setEditingYacht] = useState<Yacht | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    main_image: '',
+    capacity: 0,
+    length: 0,
+    price_per_day: 0,
+    price_per_hour: 0,
+  });
+  const [yachtOptions, setYachtOptions] = useState<YachtOption[]>([]);
+  const [newOption, setNewOption] = useState({
+    name: '',
+    price: 0,
+    description: '',
+    is_active: true,
+  });
+
+  useEffect(() => {
+    if (editingYacht) {
+      loadYachtOptions(editingYacht.id);
+    }
+  }, [editingYacht]);
+
+  const loadYachtOptions = async (yachtId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('yacht_options')
+        .select('*')
+        .eq('yacht_id', yachtId)
+        .order('display_order');
+      
+      if (error) throw error;
+      setYachtOptions(data || []);
+    } catch (error) {
+      console.error('Error loading options:', error);
+    }
+  };
+
+  const handleAddOption = async () => {
+    if (!newOption.name || newOption.price <= 0) {
+      toast.error(t('يرجى ملء جميع حقول الخيار', 'Please fill all option fields'));
+      return;
+    }
+
+    if (!editingYacht) {
+      // Add to temporary list for new yacht
+      setYachtOptions([...yachtOptions, { 
+        ...newOption, 
+        id: `temp-${Date.now()}`, 
+        yacht_id: '',
+        display_order: yachtOptions.length 
+      } as YachtOption]);
+      setNewOption({ name: '', price: 0, description: '', is_active: true });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('yacht_options')
+        .insert({
+          ...newOption,
+          yacht_id: editingYacht.id,
+          display_order: yachtOptions.length,
+        });
+      
+      if (error) throw error;
+      toast.success(t('تم إضافة الخيار', 'Option added'));
+      loadYachtOptions(editingYacht.id);
+      setNewOption({ name: '', price: 0, description: '', is_active: true });
+    } catch (error) {
+      console.error('Error adding option:', error);
+      toast.error(t('خطأ في إضافة الخيار', 'Error adding option'));
+    }
+  };
+
+  const handleDeleteOption = async (optionId: string) => {
+    if (optionId.startsWith('temp-')) {
+      setYachtOptions(yachtOptions.filter(o => o.id !== optionId));
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('yacht_options')
+        .delete()
+        .eq('id', optionId);
+      
+      if (error) throw error;
+      toast.success(t('تم حذف الخيار', 'Option deleted'));
+      if (editingYacht) loadYachtOptions(editingYacht.id);
+    } catch (error) {
+      console.error('Error deleting option:', error);
+      toast.error(t('خطأ في حذف الخيار', 'Error deleting option'));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      if (editingYacht) {
+        // Update yacht data
+        const { error: updateError } = await supabase
+          .from('yachts')
+          .update(formData)
+          .eq('id', editingYacht.id);
+        
+        if (updateError) {
+          console.error('Yacht update error:', updateError);
+          throw new Error(updateError.message || 'Failed to update yacht');
+        }
+        
+        toast.success(t('تم تحديث اليخت بنجاح', 'Yacht updated successfully'));
+      } else {
+        // Add yacht directly using supabase to get the ID back
+        const { data: newYacht, error: yachtError } = await supabase
+          .from('yachts')
+          .insert(formData)
+          .select()
+          .single();
+        
+        if (yachtError) {
+          console.error('Yacht insert error:', yachtError);
+          throw new Error(yachtError.message || 'Failed to add yacht');
+        }
+        
+        // Add temporary options for new yacht
+        if (yachtOptions.length > 0 && newYacht) {
+          const optionsToInsert = yachtOptions.map((opt, index) => ({
+            yacht_id: newYacht.id,
+            name: opt.name,
+            price: opt.price,
+            description: opt.description,
+            is_active: opt.is_active,
+            display_order: index,
+          }));
+          
+          const { error: optionsError } = await supabase
+            .from('yacht_options')
+            .insert(optionsToInsert);
+          
+          if (optionsError) {
+            console.error('Options insert error:', optionsError);
+            throw new Error(optionsError.message || 'Failed to add options');
+          }
+        }
+        
+        toast.success(t('تم إضافة اليخت بنجاح', 'Yacht added successfully'));
+      }
+      
+      resetForm();
+      onUpdate();
+    } catch (error: any) {
+      console.error('Error saving yacht:', error);
+      const errorMessage = error?.message || t('حدث خطأ في حفظ اليخت', 'Error saving yacht');
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleEdit = (yacht: Yacht) => {
+    setEditingYacht(yacht);
+    setFormData({
+      name: yacht.name,
+      description: yacht.description || '',
+      main_image: yacht.main_image || '',
+      capacity: yacht.capacity,
+      length: yacht.length || 0,
+      price_per_day: yacht.price_per_day || 0,
+      price_per_hour: yacht.price_per_hour,
+    });
+    setYachtOptions([]);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm(t('هل أنت متأكد من حذف هذا اليخت؟', 'Are you sure you want to delete this yacht?'))) {
+      try {
+        await yachtService.deleteYacht(id);
+        toast.success(t('تم حذف اليخت بنجاح', 'Yacht deleted successfully'));
+        onUpdate();
+      } catch (error) {
+        console.error('Error deleting yacht:', error);
+        toast.error(t('حدث خطأ في حذف اليخت', 'Error deleting yacht'));
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      main_image: '',
+      capacity: 0,
+      length: 0,
+      price_per_day: 0,
+      price_per_hour: 0,
+    });
+    setEditingYacht(null);
+    setYachtOptions([]);
+    setNewOption({ name: '', price: 0, description: '', is_active: true });
+    setShowForm(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-primary">{t('إدارة اليخوت', 'Yacht Management')}</h2>
+        <Button onClick={() => setShowForm(true)} className="bg-gradient-ocean">
+          <Plus className="w-4 h-4 ml-2" />
+          {t('إضافة يخت جديد', 'Add New Yacht')}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {yachts.map((yacht) => (
+          <Card key={yacht.id} className="overflow-hidden">
+            <img src={yacht.main_image || ''} alt={yacht.name} className="w-full h-48 object-cover" />
+            <div className="p-4">
+              <h3 className="font-bold text-lg mb-2">{yacht.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{yacht.description}</p>
+              <div className="flex gap-2">
+                <Button onClick={() => handleEdit(yacht)} variant="outline" size="sm" className="flex-1">
+                  <Edit className="w-4 h-4 ml-1" />
+                  {t('تعديل', 'Edit')}
+                </Button>
+                <Button onClick={() => handleDelete(yacht.id)} variant="destructive" size="sm" className="flex-1">
+                  <Trash2 className="w-4 h-4 ml-1" />
+                  {t('حذف', 'Delete')}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingYacht ? t('تعديل اليخت', 'Edit Yacht') : t('إضافة يخت جديد', 'Add New Yacht')}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>{t('الاسم', 'Name')}</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label>{t('الوصف', 'Description')}</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label>{t('رابط الصورة', 'Image URL')}</Label>
+              <Input
+                value={formData.main_image}
+                onChange={(e) => setFormData({ ...formData, main_image: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('السعة', 'Capacity (people)')}</Label>
+                <Input
+                  type="number"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>{t('الطول', 'Length (meters)')}</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={formData.length}
+                  onChange={(e) => setFormData({ ...formData, length: Number(e.target.value) })}
+                  placeholder="e.g., 25.5"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('السعر اليومي', 'Price/Day (AED)')}</Label>
+                <Input
+                  type="number"
+                  value={formData.price_per_day}
+                  onChange={(e) => setFormData({ ...formData, price_per_day: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>{t('السعر بالساعة', 'Price/Hour (AED)')}</Label>
+                <Input
+                  type="number"
+                  value={formData.price_per_hour}
+                  onChange={(e) => setFormData({ ...formData, price_per_hour: Number(e.target.value) })}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Yacht Options Section */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold mb-4">{t('خيارات اليخت', 'Yacht Options')}</h3>
+              
+              {/* Existing Options */}
+              <div className="space-y-2 mb-4">
+                {yachtOptions.map((option) => (
+                  <div key={option.id} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium">{option.name}</p>
+                      {option.description && (
+                        <p className="text-sm text-muted-foreground">{option.description}</p>
+                      )}
+                      <p className="text-sm font-semibold text-primary">{option.price} AED</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteOption(option.id)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Option */}
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium text-sm">{t('إضافة خيار جديد', 'Add New Option')}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">{t('اسم الخيار', 'Option Name')}</Label>
+                    <Input
+                      value={newOption.name}
+                      onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
+                      placeholder="e.g., Jet Ski"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">{t('السعر', 'Price (AED)')}</Label>
+                    <Input
+                      type="number"
+                      value={newOption.price}
+                      onChange={(e) => setNewOption({ ...newOption, price: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm">{t('الوصف', 'Description')}</Label>
+                  <Input
+                    value={newOption.description}
+                    onChange={(e) => setNewOption({ ...newOption, description: e.target.value })}
+                    placeholder="Optional description"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={newOption.is_active}
+                    onCheckedChange={(checked) => setNewOption({ ...newOption, is_active: checked })}
+                  />
+                  <Label className="text-sm">{t('نشط', 'Active')}</Label>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAddOption}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('إضافة خيار', 'Add Option')}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="button" onClick={resetForm} variant="outline" className="flex-1">
+                {t('إلغاء', 'Cancel')}
+              </Button>
+              <Button type="submit" className="flex-1 bg-gradient-ocean">
+                {editingYacht ? t('تحديث', 'Update') : t('إضافة', 'Add')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};

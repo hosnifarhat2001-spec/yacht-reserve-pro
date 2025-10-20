@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Luxury Yacht Theme - Red & Elegant */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Premier Red */
+    --primary: 0 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Luxury Gold */
+    --secondary: 42 35% 60%;
+    --secondary-foreground: 0 0% 10%;
+
+    /* Azure Accent */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 30% 94%;
+    --muted-foreground: 210 20% 50%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 25% 88%;
+    --input: 210 25% 88%;
+    --ring: 205 80% 26%;
+
+    --radius: 0.75rem;
+
+    /* Custom yacht theme colors */
+    --ocean-light: 205 70% 90%;
+    --ocean-medium: 205 75% 50%;
+    --gold-light: 42 45% 75%;
+    --gold-dark: 42 35% 45%;
+
+    /* Gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(205 80% 26%) 0%, hsl(217 91% 60%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42 45% 75%) 0%, hsl(42 35% 60%) 100%);
+    --gradient-hero: linear-gradient(to bottom, hsl(205 80% 26% / 0.95), hsl(205 70% 35% / 0.9));
+
+    /* Sidebar */
+    --sidebar-background: 205 80% 26%;
+    --sidebar-foreground: 210 30% 98%;
+    --sidebar-primary: 42 35% 60%;
+    --sidebar-primary-foreground: 210 40% 15%;
+    --sidebar-accent: 205 70% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 205 70% 35%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 210 40% 8%;
+    --foreground: 210 30% 95%;
+
+    --card: 210 35% 12%;
+    --card-foreground: 210 30% 95%;
+
+    --popover: 210 35% 12%;
+    --popover-foreground: 210 30% 95%;
+
+    --primary: 0 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 35% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 205 70% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 30% 18%;
+    --muted-foreground: 210 20% 65%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 30% 22%;
+    --input: 210 30% 22%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 210 35% 10%;
+    --sidebar-foreground: 210 30% 95%;
+    --sidebar-primary: 42 35% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 30% 18%;
+    --sidebar-accent-foreground: 210 30% 95%;
+    --sidebar-border: 210 30% 22%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+}
