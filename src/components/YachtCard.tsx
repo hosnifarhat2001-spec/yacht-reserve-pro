@@ -64,7 +64,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
 
   return (
     <>
-      <Card className="overflow-hidden group hover:shadow-2xl transition-all duration-300 animate-fade-in">
+      <Card className="overflow-hidden group hover:shadow-2xl transition-all duration-300 animate-fade-in h-full flex flex-col">
         <div className="relative overflow-hidden h-64">
           <img
             src={yacht.main_image || ''}
@@ -74,7 +74,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 flex-1 flex flex-col">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-primary mb-2">
@@ -88,11 +88,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
               <Badge variant="secondary" className="text-xl font-bold px-4 py-2 shrink-0">
                 {yacht.price_per_day} AED/hour
               </Badge>
-              {hasActivePromotion && promotions[0] && (
-                <Badge variant="default" className="bg-green-600 text-white">
-                  {promotions[0].discount_percentage}% {t('خصم', 'OFF')}
-                </Badge>
-              )}
+             
             </div>
           </div>
 
@@ -105,6 +101,12 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
               <div className="flex items-center gap-2 text-sm">
                 <Ruler className="w-4 h-4 text-primary" />
                 <span>{yacht.length}m {t('طول', 'Length')}</span>
+              </div>
+            )}
+            {yacht.location && yacht.location.trim().length > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <Ship className="w-4 h-4 text-primary" />
+                <span>{yacht.location}</span>
               </div>
             )}
           </div>
@@ -125,7 +127,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-auto">
             <Button
               onClick={() => setIsModalOpen(true)}
               className="flex-1 bg-gradient-ocean hover:opacity-90"

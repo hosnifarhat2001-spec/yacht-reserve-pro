@@ -26,12 +26,16 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     name: '',
     description: '',
     main_image: '',
-    capacity: 0,
-    length: 0,
-    price_per_day: 0,
-    price_per_hour: 0,
+    capacity: null as number | null,
+    length: null as number | null,
+    price_per_day: null as number | null,
+    price_per_hour: null as number | null,
+    location: '',
+    is_available: true,
+    features: [] as string[],
   });
   const [yachtOptions, setYachtOptions] = useState<YachtOption[]>([]);
+  const [optionsByYacht, setOptionsByYacht] = useState<Record<string, YachtOption[]>>({});
   const [newOption, setNewOption] = useState({
     name: '',
     price: 0,
@@ -44,6 +48,32 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       loadYachtOptions(editingYacht.id);
     }
   }, [editingYacht]);
+
+  // Load options for all yachts to show on cards
+  useEffect(() => {
+    const loadAllOptions = async () => {
+      try {
+        const ids = yachts.map((y) => y.id);
+        if (ids.length === 0) return;
+        const { data, error } = await supabase
+          .from('yacht_options')
+          .select('*')
+          .in('yacht_id', ids)
+          .order('display_order');
+        if (error) throw error;
+        const map: Record<string, YachtOption[]> = {};
+        (data || []).forEach((opt: any) => {
+          const arr = map[opt.yacht_id] || [];
+          arr.push(opt as YachtOption);
+          map[opt.yacht_id] = arr;
+        });
+        setOptionsByYacht(map);
+      } catch (e) {
+        console.error('Error loading options for all yachts', e);
+      }
+    };
+    loadAllOptions();
+  }, [yachts]);
 
   const loadYachtOptions = async (yachtId: string) => {
     try {
@@ -122,11 +152,12 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     e.preventDefault();
     
     try {
+      const { features: _omitFeatures, ...payload } = formData;
       if (editingYacht) {
         // Update yacht data
         const { error: updateError } = await supabase
           .from('yachts')
-          .update(formData)
+          .update(payload)
           .eq('id', editingYacht.id);
         
         if (updateError) {
@@ -139,7 +170,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
         // Add yacht directly using supabase to get the ID back
         const { data: newYacht, error: yachtError } = await supabase
           .from('yachts')
-          .insert(formData)
+          .insert(payload)
           .select()
           .single();
         
@@ -187,10 +218,13 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       name: yacht.name,
       description: yacht.description || '',
       main_image: yacht.main_image || '',
-      capacity: yacht.capacity,
-      length: yacht.length || 0,
-      price_per_day: yacht.price_per_day || 0,
-      price_per_hour: yacht.price_per_hour,
+      capacity: yacht.capacity ?? null,
+      length: yacht.length ?? null,
+      price_per_day: yacht.price_per_day ?? null,
+      price_per_hour: yacht.price_per_hour ?? null,
+      location: yacht.location || '',
+      is_available: yacht.is_available ?? true,
+      features: yacht.features || [],
     });
     setYachtOptions([]);
     setShowForm(true);
@@ -214,10 +248,13 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       name: '',
       description: '',
       main_image: '',
-      capacity: 0,
-      length: 0,
-      price_per_day: 0,
-      price_per_hour: 0,
+      capacity: null,
+      length: null,
+      price_per_day: null,
+      price_per_hour: null,
+      location: '',
+      is_available: true,
+      features: [],
     });
     setEditingYacht(null);
     setYachtOptions([]);
@@ -242,6 +279,42 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">{yacht.name}</h3>
               <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{yacht.description}</p>
+              {/* Location and availability chips hidden per request */}
+              <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                <div>
+                  <span className="text-muted-foreground">{t('السعة', 'Capacity')}:</span> {yacht.capacity}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('الطول', 'Length')}:</span> {yacht.length ?? '-'}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('السعر/ساعة', 'Price/Hour')}:</span> {yacht.price_per_hour} AED
+                </div>
+                {/* Hide Price/Day per request */}
+              </div>
+
+              {/* Show options from DB (yacht_options); fallback to features if options missing */}
+              {Array.isArray(optionsByYacht[yacht.id]) && optionsByYacht[yacht.id].length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {optionsByYacht[yacht.id]
+                    .filter((opt) => opt.is_active !== false)
+                    .map((opt) => (
+                      <span key={opt.id} className="text-xs px-2 py-1 rounded border">
+                        {opt.name}
+                      </span>
+                    ))}
+                </div>
+              ) : (
+                Array.isArray(yacht.features) && yacht.features.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {yacht.features.map((f, idx) => (
+                      <span key={idx} className="text-xs px-2 py-1 rounded border">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )
+              )}
               <div className="flex gap-2">
                 <Button onClick={() => handleEdit(yacht)} variant="outline" size="sm" className="flex-1">
                   <Edit className="w-4 h-4 ml-1" />
@@ -296,8 +369,11 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 <Label>{t('السعة', 'Capacity (people)')}</Label>
                 <Input
                   type="number"
-                  value={formData.capacity}
-                  onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                  value={formData.capacity ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, capacity: v === '' ? null : Number(v) });
+                  }}
                   required
                 />
               </div>
@@ -306,8 +382,11 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 <Input
                   type="number"
                   step="0.1"
-                  value={formData.length}
-                  onChange={(e) => setFormData({ ...formData, length: Number(e.target.value) })}
+                  value={formData.length ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, length: v === '' ? null : Number(v) });
+                  }}
                   placeholder="e.g., 25.5"
                 />
               </div>
@@ -318,20 +397,46 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 <Label>{t('السعر اليومي', 'Price/Day (AED)')}</Label>
                 <Input
                   type="number"
-                  value={formData.price_per_day}
-                  onChange={(e) => setFormData({ ...formData, price_per_day: Number(e.target.value) })}
+                  value={formData.price_per_day ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, price_per_day: v === '' ? null : Number(v) });
+                  }}
                 />
               </div>
               <div>
                 <Label>{t('السعر بالساعة', 'Price/Hour (AED)')}</Label>
                 <Input
                   type="number"
-                  value={formData.price_per_hour}
-                  onChange={(e) => setFormData({ ...formData, price_per_hour: Number(e.target.value) })}
+                  value={formData.price_per_hour ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, price_per_hour: v === '' ? null : Number(v) });
+                  }}
                   required
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('الموقع', 'Location')}</Label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder={t('المدينة أو المرسى', 'City or Marina')}
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <Switch
+                  checked={formData.is_available}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
+                />
+                <Label>{t('متاح للحجز', 'Available for booking')}</Label>
+              </div>
+            </div>
+
+            {/* Features field removed for both Add and Update flows as requested */}
 
             {/* Yacht Options Section */}
             <div className="border-t pt-4 mt-4">

@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { CartSheet } from '@/components/CartSheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Waves, Phone, Mail, MapPin } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import heroImage from '@/assets/hero-yacht.jpg';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { yachtService, promotionService } from '@/lib/storage';
+import { yachtService, promotionService, settingsService } from '@/lib/storage';
 import { Yacht, Promotion } from '@/types';
 
 const Index = () => {
@@ -22,6 +23,10 @@ const Index = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const { t } = useLanguage();
+
+  // WhatsApp contact configuration (loaded from settings for consistency)
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const whatsappMessage = encodeURIComponent('Hello, I want to book a yacht.');
 
   useEffect(() => {
     loadData();
@@ -55,6 +60,19 @@ const Index = () => {
       supabase.removeChannel(yachtsChannel);
       supabase.removeChannel(promotionsChannel);
     };
+  }, []);
+
+  // Load WhatsApp number from site settings to keep it consistent with booking flow
+  useEffect(() => {
+    const loadWhatsApp = async () => {
+      try {
+        const number = await settingsService.getWhatsAppNumber();
+        setWhatsappNumber(number);
+      } catch (e) {
+        console.error('Failed to load WhatsApp number', e);
+      }
+    };
+    loadWhatsApp();
   }, []);
 
   const loadData = async () => {
@@ -108,6 +126,28 @@ const Index = () => {
         <CartSheet />
       </div>
       <Navigation />
+
+      {/* Floating WhatsApp Button */}
+
+{whatsappNumber && (
+  <div className="fixed bottom-5 right-5 z-50">
+    <a
+      href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Open WhatsApp chat"
+      title="دردشة واتساب"
+      className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-800/30 transform transition-all duration-300 hover:scale-110"
+    >
+      <span className="absolute inset-0 rounded-full bg-emerald-400 opacity-20 blur-sm animate-pulse" aria-hidden="true" />
+      <span className="absolute -bottom-3 right-0 hidden sm:block group-hover:block transform translate-y-0 transition-all duration-200"></span>
+
+      {/* WhatsApp icon */}
+      <WhatsAppIcon className="w-7 h-7 text-white relative z-10" />
+    </a>
+  </div>
+)}
+
 
       {/* Hero Section */}
       <section id="home" className="relative h-[600px] flex items-center justify-center overflow-hidden mt-20">
@@ -185,7 +225,7 @@ const Index = () => {
             <p className="text-xl text-muted-foreground">{t('لا توجد يخوت متاحة', 'No yachts available')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
             {filteredYachts.map((yacht, index) => {
               // Find active promotion for this specific yacht or global promotions
               const yachtPromo = promotions.find(
@@ -195,7 +235,7 @@ const Index = () => {
                 (!p.valid_until || new Date(p.valid_until) >= new Date())
               );
               return (
-                <div key={yacht.id} style={{ animationDelay: `${index * 100}ms` }} className="relative">
+                <div key={yacht.id} style={{ animationDelay: `${index * 100}ms` }} className="relative h-full">
                   {yachtPromo && (
                     <div className="absolute -top-2 -right-2 z-10 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
                       {yachtPromo.discount_percentage}% {t('خصم', 'OFF')}

@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Ship, Calendar, Users, TrendingUp } from 'lucide-react';
+import { Ship, Calendar, Users, TrendingUp, DollarSign } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DashboardStatsProps {
@@ -40,11 +40,11 @@ export const DashboardStats = ({
       bgColor: 'bg-yellow-100',
     },
     {
-      title: t('إجمالي العملاء', 'Total Clients'),
+      title: t('إجمالي المبلغ', 'Total Amount'),
       value: totalClients,
-      icon: Users,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-100',
+      icon: DollarSign,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
     },
   ];
 

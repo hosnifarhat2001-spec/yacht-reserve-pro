@@ -104,6 +104,7 @@ const AdminDashboard = () => {
   }
 
   const pendingBookings = bookings.filter((b) => b.status === 'pending').length;
+  const totalAmount = bookings.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,7 +161,7 @@ const AdminDashboard = () => {
               totalYachts={yachts.length}
               totalBookings={bookings.length}
               pendingBookings={pendingBookings}
-              totalClients={clients.length}
+              totalClients={totalAmount}
             />
           </TabsContent>
 
