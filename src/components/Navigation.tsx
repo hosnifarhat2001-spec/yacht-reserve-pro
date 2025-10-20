@@ -33,7 +33,7 @@ export const Navigation = () => {
             alt="Asfar Logo" 
             className="w-28 h-28 pt-2 group-hover:scale-110 transition-transform"
           />
-          <span className="text-3xl font-bold text-primary-foreground">Asfar</span>
+          <span className="text-3xl font-bold text-primary-foreground font-['Playfair_Display']">Asfar</span>
         </div>
 
         {/* روابط القائمة */}
