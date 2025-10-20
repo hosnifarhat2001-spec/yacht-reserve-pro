@@ -1,20 +1,52 @@
-import { Booking } from '@/types';
+import { useState, useMemo } from 'react';
+import { Booking, Yacht } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Calendar, User, Phone, Mail, MessageCircle, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Trash2, Calendar, User, Phone, Mail, MessageCircle, Clock, Ship } from 'lucide-react';
 import { bookingService } from '@/lib/storage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BookingManagementProps {
   bookings: Booking[];
+  yachts: Yacht[];
   onUpdate: () => void;
 }
 
-export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps) => {
-  const { t, language } = useLanguage();
+export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagementProps) => {
+  const { t } = useLanguage();
+  const [search, setSearch] = useState('');
 
+  // 🧭 Map yacht IDs to names for quick lookup
+  const yachtMap = useMemo(() => {
+    const map = new Map<string, string>();
+    yachts.forEach((y) => {
+      if (y && y.id) map.set(y.id, y.name || '');
+    });
+    return map;
+  }, [yachts]);
+
+  // 🔍 Filter bookings by search input
+  const filteredBookings = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return bookings;
+    return bookings.filter((b) => {
+      const fields = [
+        b.id,
+        b.customer_name,
+        b.customer_email,
+        b.customer_phone,
+        b.status,
+        b.booking_source,
+        yachtMap.get(b.yacht_id || '') || '',
+      ];
+      return fields.some((f) => (f || '').toLowerCase().includes(q));
+    });
+  }, [bookings, search, yachtMap]);
+
+  // ✅ Update status
   const handleStatusUpdate = async (id: string, status: 'confirmed' | 'cancelled') => {
     try {
       await bookingService.updateBookingStatus(id, status);
@@ -26,6 +58,7 @@ export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps
     }
   };
 
+  // 🗑️ Delete booking
   const handleDelete = async (id: string) => {
     if (confirm(t('هل أنت متأكد من حذف هذا الحجز؟', 'Are you sure you want to delete this booking?'))) {
       try {
@@ -39,6 +72,7 @@ export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps
     }
   };
 
+  // 🎨 Color based on booking status
   const getStatusColor = (status: Booking['status']) => {
     switch (status) {
       case 'confirmed':
@@ -65,13 +99,23 @@ export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-primary">{t('إدارة الحجوزات', 'Booking Management')}</h2>
+      <h2 className="text-2xl font-bold text-primary">
+        {t('إدارة الحجوزات', 'Booking Management')}
+      </h2>
+
+      <div>
+        <Input
+          placeholder={t('ابحث في الحجوزات...', 'Search bookings...')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {bookings.map((booking) => (
+        {filteredBookings.map((booking) => (
           <Card key={booking.id} className="p-6">
             <div className="flex items-start justify-between mb-4">
-            <div>
+              <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-xl font-bold">
                     {t('حجز', 'Booking')} #{booking.id.slice(0, 8)}
@@ -86,10 +130,20 @@ export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps
                     </Badge>
                   )}
                 </div>
+
+                {booking.yacht_id && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Ship className="w-4 h-4" />
+                    <span className="font-medium">{t('اليخت:', 'Yacht:')}</span>
+                    <span>{yachtMap.get(booking.yacht_id) || t('غير محدد', 'Not specified')}</span>
+                  </div>
+                )}
+
                 <p className="text-sm text-muted-foreground">
                   {t('رقم الحجز:', 'Booking ID:')} {booking.id}
                 </p>
               </div>
+
               <div className="flex gap-2">
                 {booking.status === 'pending' && (
                   <>
@@ -157,14 +211,25 @@ export const BookingManagement = ({ bookings, onUpdate }: BookingManagementProps
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">{t('نوع الإيجار:', 'Type:')}</span>
                     <span>
-                      {booking.duration_type === 'hourly' ? t('بالساعة', 'Hourly') : t('يومي', 'Daily')}
-                      {booking.duration_value && ` (${booking.duration_value} ${booking.duration_type === 'hourly' ? t('ساعات', 'hours') : t('أيام', 'days')})`}
+                      {booking.duration_type === 'hourly'
+                        ? t('بالساعة', 'Hourly')
+                        : t('يومي', 'Daily')}
+                      {booking.duration_value &&
+                        ` (${booking.duration_value} ${
+                          booking.duration_type === 'hourly'
+                            ? t('ساعات', 'hours')
+                            : t('أيام', 'days')
+                        })`}
                     </span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">{t('المبلغ الإجمالي:', 'Total Amount:')}</span>
-                  <span className="text-lg font-bold text-secondary">${booking.total_price}</span>
+                  <span className="font-medium">
+                    {t('المبلغ الإجمالي:', 'Total Amount:')}
+                  </span>
+                  <span className="text-lg font-bold text-secondary">
+                    ${booking.total_price}
+                  </span>
                 </div>
               </div>
             </div>

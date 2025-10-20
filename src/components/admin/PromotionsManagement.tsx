@@ -89,7 +89,7 @@ export const PromotionsManagement = ({ promotions, yachts, onUpdate }: Promotion
       valid_from: promotion.valid_from || '',
       valid_until: promotion.valid_until || '',
       is_active: promotion.is_active,
-      yacht_id: promotion.yacht_id || '',
+      yacht_id: promotion.yacht_id ? String(promotion.yacht_id) : '',
     });
     setShowForm(true);
   };
@@ -245,19 +245,21 @@ export const PromotionsManagement = ({ promotions, yachts, onUpdate }: Promotion
             <div>
               <Label>{t('اختيار اليخت (اختياري)', 'Select Yacht (Optional)')}</Label>
               <Select 
-                value={formData.yacht_id} 
-                onValueChange={(value) => setFormData({ ...formData, yacht_id: value })}
+                value={formData.yacht_id || undefined}
+                onValueChange={(value) => setFormData({ ...formData, yacht_id: value === 'all' ? '' : value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('جميع اليخوت', 'All Yachts')} />
+                  <SelectValue placeholder={t('اختر يختًا', 'Select a yacht')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('جميع اليخوت', 'All Yachts')}</SelectItem>
-                  {yachts.map((yacht) => (
-                    <SelectItem key={yacht.id} value={yacht.id}>
-                      {yacht.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">{t('جميع اليخوت', 'All Yachts')}</SelectItem>
+                  {yachts
+                    .filter((yacht) => yacht && yacht.id !== undefined && yacht.id !== null && String(yacht.id).trim() !== '')
+                    .map((yacht) => (
+                      <SelectItem key={String(yacht.id)} value={String(yacht.id)}>
+                        {yacht.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">

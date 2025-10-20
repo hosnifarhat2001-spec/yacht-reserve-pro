@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Ship, Calendar, Users, Tag, BarChart, ShoppingCart, Settings } from 'lucide-react';
+import { LogOut, Ship, Calendar, Tag, BarChart, Settings } from 'lucide-react';
 import { YachtManagement } from '@/components/admin/YachtManagement';
 import { BookingManagement } from '@/components/admin/BookingManagement';
-import { ClientManagement } from '@/components/admin/ClientManagement';
 import { PromotionsManagement } from '@/components/admin/PromotionsManagement';
 import { DashboardStats } from '@/components/admin/DashboardStats';
-import { CartManagement } from '@/components/admin/CartManagement';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
 import { yachtService, bookingService, clientService, promotionService } from '@/lib/storage';
 import { Yacht, Booking, Client, Promotion } from '@/types';
@@ -128,7 +126,7 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">{t('الإحصائيات', 'Statistics')}</span>
@@ -146,14 +144,7 @@ const AdminDashboard = () => {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="carts" className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('السلات', 'Carts')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="clients" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('العملاء', 'Clients')}</span>
-            </TabsTrigger>
+            
             <TabsTrigger value="promotions" className="flex items-center gap-2">
               <Tag className="w-4 h-4" />
               <span className="hidden sm:inline">{t('العروض', 'Promotions')}</span>
@@ -178,16 +169,10 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="bookings">
-            <BookingManagement bookings={bookings} onUpdate={loadData} />
+            <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
           </TabsContent>
 
-          <TabsContent value="carts">
-            <CartManagement />
-          </TabsContent>
-
-          <TabsContent value="clients">
-            <ClientManagement clients={clients} onUpdate={loadData} />
-          </TabsContent>
+          
 
         <TabsContent value="promotions">
           <PromotionsManagement promotions={promotions} yachts={yachts} onUpdate={loadData} />
