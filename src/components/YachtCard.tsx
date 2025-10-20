@@ -86,7 +86,7 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
             </div>
             <div className="flex flex-col items-end gap-2">
               <Badge variant="secondary" className="text-xl font-bold px-4 py-2 shrink-0">
-                ${yacht.price_per_day}
+                {yacht.price_per_day} AED/hour
               </Badge>
               {hasActivePromotion && promotions[0] && (
                 <Badge variant="default" className="bg-green-600 text-white">
