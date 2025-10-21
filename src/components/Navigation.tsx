@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Globe, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import asfarLogo from '@/assets/asfar-logo.png';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export const Navigation = () => {
-  const { toggleLanguage, t } = useLanguage();
+export const Navigation = (_props: {}) => {
+  const { language, toggleLanguage, t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -28,56 +29,61 @@ export const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary backdrop-blur-sm border-b border-primary-foreground/20">
       <div className="flex items-center justify-between h-20 px-4">
-        
         {/* Logo + Asfar */}
-        <div className="flex items-center gap-3 ml-0 pl-0 cursor-pointer" onClick={() => handleScroll('home')}>
-          <img 
-            src={asfarLogo} 
-            alt="Asfar Logo" 
+        <div
+          className="flex items-center gap-3 ml-0 pl-0 cursor-pointer"
+          onClick={() => handleScroll('home')}
+        >
+          <img
+            src={asfarLogo}
+            alt="Asfar Logo"
             className="w-28 h-28 pt-2 group-hover:scale-110 transition-transform"
           />
-          <span className="text-3xl font-bold text-primary-foreground font-['Playfair_Display']">Asfar</span>
+          <span className="text-3xl font-bold text-primary-foreground font-['Playfair_Display']">
+            Asfar
+          </span>
         </div>
 
-        {/* روابط القائمة */}
-        <div className="hidden md:flex items-center gap-6 pr-6">
+        {/* روابط القائمة + Desktop Language Selector */}
+        <div className="hidden md:flex items-center gap-6 pr-6 pw-50 ">
           <button
             onClick={() => handleScroll('home')}
-            className="text-primary-foreground hover:text-primary-foreground/80 font-medium transition-colors"
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('الرئيسية', 'Home')}
           </button>
           <button
             onClick={() => handleScroll('yachts')}
-            className="text-primary-foreground hover:text-primary-foreground/80 font-medium transition-colors"
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('اليخوت', 'Fleet')}
           </button>
           <button
             onClick={() => handleScroll('contact')}
-            className="text-primary-foreground hover:text-primary-foreground/80 font-medium transition-colors"
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('اتصل بنا', 'Contact')}
           </button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleLanguage}
-            className="hover:bg-primary-foreground/20 text-primary-foreground"
+
+          {/* Select لتغيير اللغة */}
+          <Select
+            value={language.code}
+            onValueChange={(val) => {
+              if (val !== language.code) toggleLanguage();
+            }}
           >
-            <Globe className="w-5 h-5" />
-          </Button>
+            <SelectTrigger className="w-[140px] bg-primary text-primary-foreground border border-primary-foreground/50">
+              <SelectValue placeholder={t('اختر اللغة', 'Select language')} />
+            </SelectTrigger>
+            <SelectContent className="bg-primary text-primary-foreground border border-primary-foreground/50">
+              <SelectItem value="ar">{t('العربية', 'Arabic')}</SelectItem>
+              <SelectItem value="en">{t('الإنجليزية', 'English')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
         {/* Mobile Controls */}
         <div className="flex md:hidden items-center gap-2 pr-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleLanguage}
-            className="hover:bg-primary-foreground/20 text-primary-foreground"
-          >
-            <Globe className="w-5 h-5" />
-          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -89,28 +95,45 @@ export const Navigation = () => {
           </Button>
         </div>
       </div>
+
       {/* Mobile Menu */}
       {open && (
         <div className="md:hidden px-4 pb-4 animate-slide-down">
           <div className="flex flex-col gap-3 bg-primary/80 rounded-xl p-4 border border-primary-foreground/20">
             <button
               onClick={() => handleScroll('home')}
-              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80"
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               {t('الرئيسية', 'Home')}
             </button>
             <button
               onClick={() => handleScroll('yachts')}
-              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80"
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               {t('اليخوت', 'Fleet')}
             </button>
             <button
               onClick={() => handleScroll('contact')}
-              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80"
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               {t('اتصل بنا', 'Contact')}
             </button>
+
+            {/* Select لغة للموبايل */}
+            <Select
+              value={language.code}
+              onValueChange={(val) => {
+                if (val !== language.code) toggleLanguage();
+              }}
+            >
+              <SelectTrigger className="mt-2 w-full bg-primary text-primary-foreground border border-primary-foreground/50">
+                <SelectValue placeholder={t('اختر اللغة', 'Select language')} />
+              </SelectTrigger>
+              <SelectContent className="bg-primary text-primary-foreground border border-primary-foreground/50">
+                <SelectItem value="ar">{t('العربية', 'Arabic')}</SelectItem>
+                <SelectItem value="en">{t('الإنجليزية', 'English')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}

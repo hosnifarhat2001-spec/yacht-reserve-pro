@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Yacht, YachtOption } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Edit, Trash2, X, MapPin } from 'lucide-react';
 import { yachtService } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -42,6 +43,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     description: '',
     is_active: true,
   });
+  const [featuresInput, setFeaturesInput] = useState('');
 
   useEffect(() => {
     if (editingYacht) {
@@ -152,7 +154,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     e.preventDefault();
     
     try {
-      const { features: _omitFeatures, ...payload } = formData;
+      const payload = formData;
       if (editingYacht) {
         // Update yacht data
         const { error: updateError } = await supabase
@@ -226,6 +228,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       is_available: yacht.is_available ?? true,
       features: yacht.features || [],
     });
+    setFeaturesInput((yacht.features || []).join(', '));
     setYachtOptions([]);
     setShowForm(true);
   };
@@ -256,6 +259,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       is_available: true,
       features: [],
     });
+    setFeaturesInput('');
     setEditingYacht(null);
     setYachtOptions([]);
     setNewOption({ name: '', price: 0, description: '', is_active: true });
@@ -279,7 +283,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">{yacht.name}</h3>
               <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{yacht.description}</p>
-              {/* Location and availability chips hidden per request */}
+              {/* Key facts */}
               <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                 <div>
                   <span className="text-muted-foreground">{t('السعة', 'Capacity')}:</span> {yacht.capacity}
@@ -290,30 +294,45 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 <div>
                   <span className="text-muted-foreground">{t('السعر/ساعة', 'Price/Hour')}:</span> {yacht.price_per_hour} AED
                 </div>
-                {/* Hide Price/Day per request */}
               </div>
 
-              {/* Show options from DB (yacht_options); fallback to features if options missing */}
-              {Array.isArray(optionsByYacht[yacht.id]) && optionsByYacht[yacht.id].length > 0 ? (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {optionsByYacht[yacht.id]
-                    .filter((opt) => opt.is_active !== false)
-                    .map((opt) => (
-                      <span key={opt.id} className="text-xs px-2 py-1 rounded border">
-                        {opt.name}
-                      </span>
-                    ))}
+              {/* Location */}
+              {yacht.location && (
+                <div className="flex items-center gap-2 text-sm mb-3">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{t('الموقع', 'Location')}:</span>
+                  <span>{yacht.location}</span>
                 </div>
-              ) : (
-                Array.isArray(yacht.features) && yacht.features.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
+              )}
+
+              {/* Options */}
+              {Array.isArray(optionsByYacht[yacht.id]) && optionsByYacht[yacht.id].filter((o)=>o.is_active!==false).length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t('الخيارات', 'Options')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {optionsByYacht[yacht.id]
+                      .filter((opt) => opt.is_active !== false)
+                      .map((opt) => (
+                        <Badge key={opt.id} variant="secondary" className="text-xs">
+                          {opt.name} · {opt.price} AED
+                        </Badge>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Features */}
+              {Array.isArray(yacht.features) && yacht.features.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t('المميزات', 'Features')}</p>
+                  <div className="flex flex-wrap gap-2">
                     {yacht.features.map((f, idx) => (
-                      <span key={idx} className="text-xs px-2 py-1 rounded border">
+                      <Badge key={idx} variant="outline" className="text-xs">
                         {f}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
-                )
+                </div>
               )}
               <div className="flex gap-2">
                 <Button onClick={() => handleEdit(yacht)} variant="outline" size="sm" className="flex-1">
@@ -436,7 +455,32 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
               </div>
             </div>
 
-            {/* Features field removed for both Add and Update flows as requested */}
+            {/* Features */}
+            <div>
+              <Label>{t('المميزات', 'Features')}</Label>
+              <Input
+                value={featuresInput}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFeaturesInput(value);
+                  const arr = value
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                  setFormData({ ...formData, features: arr });
+                }}
+                placeholder={t('افصل بين المميزات بفواصل، مثال: نظام صوتي, سطح شمسي, طاقم', 'Comma-separated, e.g., Sound system, Sun deck, Crew')}
+              />
+              {formData.features.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.features.map((f, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {f}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Yacht Options Section */}
             <div className="border-t pt-4 mt-4">

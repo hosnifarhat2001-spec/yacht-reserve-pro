@@ -33,6 +33,9 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [availableOptions, setAvailableOptions] = useState<YachtOption[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  // Tracks whether the user tried to go to the next step.
+  // We only show red inline errors after this becomes true.
+  const [attemptedNext, setAttemptedNext] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -287,14 +290,25 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
                   <Clock className="w-4 h-4" />
                   {t('عدد الساعات', 'Number of Hours')}
                 </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={hours}
-                  onChange={(e) => setHours(Math.max(1, parseInt(e.target.value) || 1))}
-                  placeholder={t('أدخل عدد الساعات', 'Enter number of hours')}
-                  className="text-lg"
-                />
+               <Input
+  type="number"
+  min="1"
+  required
+  value={hours === 0 ? '' : hours} // إذا كانت القيمة 0، خليها فراغ
+  onChange={(e) => {
+    const val = parseInt(e.target.value);
+    setHours(isNaN(val) ? 0 : val); // لو المستخدم مسح كل شيء، خليها 0
+  }}
+  placeholder={t('أدخل عدد الساعات', 'Enter number of hours')}
+  className={cn(
+    "text-lg",
+    attemptedNext && (!hours || hours < 1) && "border-red-500 focus-visible:ring-red-500"
+  )}
+/>
+
+                {attemptedNext && (!hours || hours < 1) && (
+                  <p className="mt-1 text-sm text-red-600">{t('هذا الحقل مطلوب', 'This field is required.')}</p>
+                )}
               </div>
 
               {availableOptions.length > 0 && (
@@ -354,29 +368,70 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
               <div>
                 <Label>{t('الاسم الكامل', 'Full Name')}</Label>
                 <Input
+                  required
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder={t('أدخل اسمك', 'Enter your name')}
+                  className={cn(
+                    attemptedNext && !customerName && "border-red-500 focus-visible:ring-red-500"
+                  )}
                 />
+                {attemptedNext && !customerName && (
+                  <p className="mt-1 text-sm text-red-600">{t('هذا الحقل مطلوب', 'This field is required.')}</p>
+                )}
               </div>
               <div>
                 <Label>{t('البريد الإلكتروني', 'Email')}</Label>
                 <Input
                   type="email"
+                  required
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder={t('أدخل بريدك الإلكتروني', 'Enter your email')}
+                  className={cn(
+                    attemptedNext && !customerEmail && "border-red-500 focus-visible:ring-red-500"
+                  )}
                 />
+                {attemptedNext && !customerEmail && (
+                  <p className="mt-1 text-sm text-red-600">{t('هذا الحقل مطلوب', 'This field is required.')}</p>
+                )}
               </div>
               <div>
                 <Label>{t('رقم الهاتف', 'Phone Number')}</Label>
                 <Input
+                  required
+                  inputMode="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder={t('أدخل رقم هاتفك', 'Enter your phone')}
+                  className={cn(
+                    attemptedNext && !customerPhone && "border-red-500 focus-visible:ring-red-500"
+                  )}
                 />
+                {attemptedNext && !customerPhone && (
+                  <p className="mt-1 text-sm text-red-600">{t('هذا الحقل مطلوب', 'This field is required.')}</p>
+                )}
               </div>
-              <Button onClick={() => setStep('payment')} className="w-full bg-gradient-ocean" size="lg">
+              <Button 
+                onClick={() => {
+                  // Mark that the user attempted to go to the next step.
+                  // This triggers inline error messages for empty required fields.
+                  setAttemptedNext(true);
+                  if (!customerName || !customerEmail || !customerPhone) {
+                    toast.error(t('يرجى ملء جميع الحقول', 'Please fill all fields'));
+                    return;
+                  }
+                  if (!hours || hours < 1) {
+                    toast.error(t('يرجى إدخال عدد الساعات', 'Please enter number of hours'));
+                    return;
+                  }
+                  // Clear attempted flag when moving forward (optional UX)
+                  setAttemptedNext(false);
+                  setStep('payment');
+                }}
+                className="w-full bg-gradient-ocean" 
+                size="lg"
+              >
                 {t('التالي', 'Next')}
               </Button>
             </div>

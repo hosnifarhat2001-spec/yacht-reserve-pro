@@ -202,7 +202,7 @@ const Index = () => {
               <Label>{t('السعر الأدنى', 'Min Price')}</Label>
               <Input
                 type="number"
-                placeholder="$0"
+                placeholder="AED 0"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
               />
@@ -211,7 +211,7 @@ const Index = () => {
               <Label>{t('السعر الأقصى', 'Max Price')}</Label>
               <Input
                 type="number"
-                placeholder="$10000"
+                placeholder="AED 10000"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
               />

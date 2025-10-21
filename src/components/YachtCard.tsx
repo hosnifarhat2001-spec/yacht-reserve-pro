@@ -85,10 +85,26 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge variant="secondary" className="text-xl font-bold px-4 py-2 shrink-0">
-                {yacht.price_per_day} AED/hour
-              </Badge>
-             
+              <div className="rounded-xl px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-lg shrink-0">
+                <div className="text-[11px] leading-none opacity-95">
+                  {t('ابتداءً من', 'From')}
+                </div>
+                <div className="text-2xl font-extrabold leading-tight">
+                  {Number(yacht.price_per_hour || 0).toFixed(0)}
+                  <span className="text-sm font-semibold ml-1">AED</span>
+                </div>
+                <div className="text-[11px] leading-none opacity-95">
+                  {t('للـساعة', 'per hour')}
+                  {typeof yacht.price_per_day === 'number' && (
+                    <>
+                      <span className="mx-1">·</span>
+                      <span>
+                        {Number(yacht.price_per_day).toFixed(0)} AED {t('لليوم', 'per day')}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -121,6 +137,23 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
                 {yachtOptions.map((option) => (
                   <Badge key={option.id} variant="outline" className="text-xs">
                     {option.name} (+{option.price} AED)
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Display Yacht Features */}
+          {yacht.features && yacht.features.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-primary">
+                {t('مميزات اليخت:', 'Yacht Features:')}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {yacht.features.slice(0, 6).map((feature: string, idx: number) => (
+                  <Badge key={idx} variant="outline" className="text-xs flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    {feature}
                   </Badge>
                 ))}
               </div>
