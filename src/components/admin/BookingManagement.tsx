@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Booking, Yacht } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Trash2, Calendar, User, Phone, Mail, MessageCircle, Clock, Ship } from 
 import { bookingService } from '@/lib/storage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BookingManagementProps {
   bookings: Booking[];
@@ -18,6 +19,31 @@ interface BookingManagementProps {
 export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagementProps) => {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
+  const [bookingOptionsById, setBookingOptionsById] = useState<Record<string, { option_name: string; option_price: number }[]>>({});
+
+  useEffect(() => {
+    const loadBookingOptions = async () => {
+      try {
+        const ids = bookings.map((b) => b.id).filter(Boolean);
+        if (ids.length === 0) return;
+        const { data, error } = await supabase
+          .from('booking_options')
+          .select('booking_id, option_name, option_price')
+          .in('booking_id', ids);
+        if (error) throw error;
+        const map: Record<string, { option_name: string; option_price: number }[]> = {};
+        (data || []).forEach((row: any) => {
+          const arr = map[row.booking_id] || [];
+          arr.push({ option_name: row.option_name, option_price: row.option_price });
+          map[row.booking_id] = arr;
+        });
+        setBookingOptionsById(map);
+      } catch (e) {
+        console.error('Error loading booking options', e);
+      }
+    };
+    loadBookingOptions();
+  }, [bookings]);
 
   // 🧭 Map yacht IDs to names for quick lookup
   const yachtMap = useMemo(() => {
@@ -139,6 +165,19 @@ export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagem
                   </div>
                 )}
 
+                {Array.isArray(bookingOptionsById[booking.id]) && bookingOptionsById[booking.id].length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('الخيارات المختارة', 'Selected Options')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {bookingOptionsById[booking.id].map((opt, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {opt.option_name} · {opt.option_price} AED
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-sm text-muted-foreground">
                   {t('رقم الحجز:', 'Booking ID:')} {booking.id}
                 </p>
@@ -207,20 +246,30 @@ export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagem
                   <span dir="ltr">{new Date(booking.end_date).toLocaleDateString()}</span>
                 </div>
                 {booking.duration_type && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">{t('نوع الإيجار:', 'Type:')}</span>
-                    <span>
-                      {booking.duration_type === 'hourly'
-                        ? t('بالساعة', 'Hourly')
-                        : t('يومي', 'Daily')}
-                      {booking.duration_value &&
-                        ` (${booking.duration_value} ${
-                          booking.duration_type === 'hourly'
-                            ? t('ساعات', 'hours')
-                            : t('أيام', 'days')
-                        })`}
-                    </span>
+                  <div className="text-sm space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">{t('نوع الإيجار:', 'Type:')}</span>
+                      <span>
+                        {booking.duration_type === 'hourly'
+                          ? t('بالساعة', 'Hourly')
+                          : t('يومي', 'Daily')}
+                        {booking.duration_value &&
+                          ` (${booking.duration_type === 'hourly'
+                            ? `${booking.duration_value} ${t('ساعات', 'hours')}`
+                            : `${booking.duration_value} ${t('أيام', 'days')}`})`}
+                      </span>
+                    </div>
+                    {Array.isArray(bookingOptionsById[booking.id]) && bookingOptionsById[booking.id].length > 0 && (
+                      <div className="pl-6 text-muted-foreground">
+                        <span className="font-medium mr-1">{t('الخيار/الخيارات:', 'Option(s):')}</span>
+                        <span>
+                          {bookingOptionsById[booking.id]
+                            .map(o => `${o.option_name} (+${o.option_price} AED)`)
+                            .join(', ')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm">

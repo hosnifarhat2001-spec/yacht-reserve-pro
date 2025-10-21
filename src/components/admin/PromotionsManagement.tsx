@@ -79,6 +79,16 @@ export const PromotionsManagement = ({ promotions, yachts, onUpdate }: Promotion
     }
   };
 
+  const formatDateForInput = (d?: string | null) => {
+    if (!d) return '';
+    try {
+      // Accept already-formatted date or ISO datetime
+      return d.length >= 10 ? d.slice(0, 10) : '';
+    } catch {
+      return '';
+    }
+  };
+
   const handleEdit = (promotion: Promotion) => {
     setEditingPromotion(promotion);
     setFormData({
@@ -86,8 +96,8 @@ export const PromotionsManagement = ({ promotions, yachts, onUpdate }: Promotion
       code: promotion.code || '',
       description: promotion.description || '',
       discount_percentage: promotion.discount_percentage || 0,
-      valid_from: promotion.valid_from || '',
-      valid_until: promotion.valid_until || '',
+      valid_from: formatDateForInput(promotion.valid_from),
+      valid_until: formatDateForInput(promotion.valid_until),
       is_active: promotion.is_active,
       yacht_id: promotion.yacht_id ? String(promotion.yacht_id) : '',
     });
@@ -188,9 +198,12 @@ export const PromotionsManagement = ({ promotions, yachts, onUpdate }: Promotion
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-1 text-sm">
-                  {promo.valid_from && promo.valid_until && (
-                    <p>{t('من:', 'From:')} {promo.valid_from} {t('إلى:', 'To:')} {promo.valid_until}</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  {promo.valid_from && (
+                    <p>{t('من:', 'From:')} {promo.valid_from.slice(0, 10)}</p>
+                  )}
+                  {promo.valid_until && (
+                    <p>{t('إلى:', 'To:')} {promo.valid_until.slice(0, 10)}</p>
                   )}
                 </div>
               </Card>
