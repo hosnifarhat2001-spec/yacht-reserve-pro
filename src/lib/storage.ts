@@ -2,6 +2,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { Yacht, Booking, Promotion, Client } from '@/types';
 
 export const settingsService = {
+  async getSetting(key: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.value || '';
+  },
+
+  async saveSetting(key: string, value: string, type: 'text' | 'json' = 'text'): Promise<void> {
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert(
+        { key, value, type },
+        { onConflict: 'key' }
+      );
+    if (error) throw error;
+  },
+
   async getWhatsAppNumber(): Promise<string> {
     const { data, error } = await supabase
       .from('site_settings')
@@ -25,6 +46,38 @@ export const settingsService = {
       });
 
     if (error) throw error;
+  },
+
+  // Convenience getters/setters for common settings
+  async getBusinessName(): Promise<string> {
+    return this.getSetting('business_name');
+  },
+  async saveBusinessName(name: string): Promise<void> {
+    return this.saveSetting('business_name', name, 'text');
+  },
+  async getSupportEmail(): Promise<string> {
+    return this.getSetting('support_email');
+  },
+  async saveSupportEmail(email: string): Promise<void> {
+    return this.saveSetting('support_email', email, 'text');
+  },
+  async getHeroTitle(): Promise<string> {
+    return this.getSetting('hero_title');
+  },
+  async saveHeroTitle(title: string): Promise<void> {
+    return this.saveSetting('hero_title', title, 'text');
+  },
+  async getHeroSubtitle(): Promise<string> {
+    return this.getSetting('hero_subtitle');
+  },
+  async saveHeroSubtitle(sub: string): Promise<void> {
+    return this.saveSetting('hero_subtitle', sub, 'text');
+  },
+  async getWhatsAppMessage(): Promise<string> {
+    return this.getSetting('whatsapp_default_message');
+  },
+  async saveWhatsAppMessage(msg: string): Promise<void> {
+    return this.saveSetting('whatsapp_default_message', msg, 'text');
   },
 };
 

@@ -59,7 +59,7 @@ export const Navigation = (_props: {}) => {
             {t('اليخوت', 'Fleet')}
           </button>
           <button
-            onClick={() => handleScroll('contact')}
+            onClick={() => handleScroll('contact us')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('اتصل بنا', 'Contact')}

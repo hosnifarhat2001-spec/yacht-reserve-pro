@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { settingsService } from '@/lib/storage';
 import { toast } from 'sonner';
-import { Phone, Save } from 'lucide-react';
+import { Phone, Save, MessageSquare } from 'lucide-react';
 
 export const SettingsManagement = () => {
   const { t } = useLanguage();
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whatsappMessage, setWhatsappMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,22 +20,24 @@ export const SettingsManagement = () => {
 
   const loadSettings = async () => {
     try {
-      const number = await settingsService.getWhatsAppNumber();
+      const [number, waMsg] = await Promise.all([
+        settingsService.getWhatsAppNumber(),
+        settingsService.getWhatsAppMessage(),
+      ]);
       setWhatsappNumber(number);
+      setWhatsappMessage(waMsg || 'Hello, I want to book a yacht.');
     } catch (error) {
       console.error('Error loading settings:', error);
     }
   };
 
   const handleSave = async () => {
-    if (!whatsappNumber.trim()) {
-      toast.error(t('يرجى إدخال رقم الهاتف', 'Please enter phone number'));
-      return;
-    }
-
     setLoading(true);
     try {
-      await settingsService.saveWhatsAppNumber(whatsappNumber);
+      await Promise.all([
+        settingsService.saveWhatsAppNumber(whatsappNumber.trim()),
+        settingsService.saveWhatsAppMessage(whatsappMessage.trim()),
+      ]);
       toast.success(t('تم حفظ الإعدادات بنجاح', 'Settings saved successfully'));
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -71,6 +74,20 @@ export const SettingsManagement = () => {
                  'Enter phone number without + or spaces (example: 966501234567)')}
             </p>
           </div>
+          <div>
+            <Label htmlFor="waMsg" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              {t('رسالة واتساب الافتراضية', 'Default WhatsApp Message')}
+            </Label>
+            <Input
+              id="waMsg"
+              type="text"
+              value={whatsappMessage}
+              onChange={(e) => setWhatsappMessage(e.target.value)}
+              placeholder={t('مثال: مرحباً، أريد حجز يخت.', 'Example: Hello, I want to book a yacht.')}
+              className="mt-2"
+            />
+          </div>
           <Button onClick={handleSave} disabled={loading} className="w-full sm:w-auto">
             <Save className="w-4 h-4 mr-2" />
             {loading ? t('جاري الحفظ...', 'Saving...') : t('حفظ الإعدادات', 'Save Settings')}
@@ -79,4 +96,5 @@ export const SettingsManagement = () => {
       </Card>
     </div>
   );
-};
+}
+;
