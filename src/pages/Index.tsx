@@ -107,8 +107,8 @@ const Index = () => {
         return name.toLowerCase().includes(searchName.toLowerCase());
       });
     }
-    if (minPrice) filtered = filtered.filter(yacht => (yacht.price_per_day || 0) >= Number(minPrice));
-    if (maxPrice) filtered = filtered.filter(yacht => (yacht.price_per_day || 0) <= Number(maxPrice));
+    if (minPrice) filtered = filtered.filter(yacht => (yacht.price_per_hour || 0) >= Number(minPrice));
+    if (maxPrice) filtered = filtered.filter(yacht => (yacht.price_per_hour || 0) <= Number(maxPrice));
     setFilteredYachts(filtered);
   };
 

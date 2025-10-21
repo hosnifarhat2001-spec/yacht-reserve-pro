@@ -97,7 +97,6 @@ export const CartSheet = () => {
                 const yachtName = yacht.name || '';
                 const yachtDescription = yacht.description || '';
                 const yachtImage = yacht.main_image || '';
-                const pricePerDay = yacht.price_per_day || 0;
                 const pricePerHour = yacht.price_per_hour;
                 
                 return (
@@ -142,13 +141,8 @@ export const CartSheet = () => {
 
                       <div className="flex flex-col gap-1 pt-2">
                         <p className="text-lg font-bold text-primary">
-                          ${Number(pricePerDay).toFixed(0)} / {t('يوم', 'day')}
+                          {Number(pricePerHour).toFixed(0)} AED / {t('ساعة', 'hour')}
                         </p>
-                        {pricePerHour && (
-                          <p className="text-sm text-muted-foreground">
-                            ${Number(pricePerHour).toFixed(0)} / {t('ساعة', 'hour')}
-                          </p>
-                        )}
                       </div>
 
                       {activePromo && (

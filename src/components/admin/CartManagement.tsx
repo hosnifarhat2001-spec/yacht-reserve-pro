@@ -31,7 +31,6 @@ interface CartItemWithYacht {
     capacity: number;
     location: string;
     features: string[];
-    price_per_day: number;
     price_per_hour: number;
   };
 }
@@ -58,7 +57,6 @@ export const CartManagement = () => {
             capacity,
             location,
             features,
-            price_per_day,
             price_per_hour
           )
         `)
@@ -296,13 +294,8 @@ export const CartManagement = () => {
 
                     <div className="flex flex-col gap-1 pt-2 border-t">
                       <p className="text-base font-bold text-primary">
-                        ${item.yacht?.price_per_day ? Number(item.yacht.price_per_day).toFixed(0) : '0'} / {t('يوم', 'day')}
+                        {item.yacht?.price_per_hour ? Number(item.yacht.price_per_hour).toFixed(0) : '0'} AED / {t('ساعة', 'hour')}
                       </p>
-                      {item.yacht?.price_per_hour && (
-                        <p className="text-sm text-muted-foreground">
-                          ${Number(item.yacht.price_per_hour).toFixed(0)} / {t('ساعة', 'hour')}
-                        </p>
-                      )}
                     </div>
 
                     {activePromo && (

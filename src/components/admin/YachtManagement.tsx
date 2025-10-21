@@ -29,7 +29,6 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     main_image: '',
     capacity: null as number | null,
     length: null as number | null,
-    price_per_day: null as number | null,
     price_per_hour: null as number | null,
     location: '',
     is_available: true,
@@ -222,7 +221,6 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       main_image: yacht.main_image || '',
       capacity: yacht.capacity ?? null,
       length: yacht.length ?? null,
-      price_per_day: yacht.price_per_day ?? null,
       price_per_hour: yacht.price_per_hour ?? null,
       location: yacht.location || '',
       is_available: yacht.is_available ?? true,
@@ -253,7 +251,6 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       main_image: '',
       capacity: null,
       length: null,
-      price_per_day: null,
       price_per_hour: null,
       location: '',
       is_available: true,
@@ -411,30 +408,17 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>{t('السعر اليومي', 'Price/Day (AED)')}</Label>
-                <Input
-                  type="number"
-                  value={formData.price_per_day ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFormData({ ...formData, price_per_day: v === '' ? null : Number(v) });
-                  }}
-                />
-              </div>
-              <div>
-                <Label>{t('السعر بالساعة', 'Price/Hour (AED)')}</Label>
-                <Input
-                  type="number"
-                  value={formData.price_per_hour ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFormData({ ...formData, price_per_hour: v === '' ? null : Number(v) });
-                  }}
-                  required
-                />
-              </div>
+            <div>
+              <Label>{t('السعر بالساعة', 'Price/Hour (AED)')}</Label>
+              <Input
+                type="number"
+                value={formData.price_per_hour ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFormData({ ...formData, price_per_hour: v === '' ? null : Number(v) });
+                }}
+                required
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

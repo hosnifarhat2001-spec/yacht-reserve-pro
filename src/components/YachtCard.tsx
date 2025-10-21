@@ -95,14 +95,6 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
                 </div>
                 <div className="text-[11px] leading-none opacity-95">
                   {t('للـساعة', 'per hour')}
-                  {typeof yacht.price_per_day === 'number' && (
-                    <>
-                      <span className="mx-1">·</span>
-                      <span>
-                        {Number(yacht.price_per_day).toFixed(0)} AED {t('لليوم', 'per day')}
-                      </span>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
