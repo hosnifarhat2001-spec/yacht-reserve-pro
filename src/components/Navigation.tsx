@@ -62,7 +62,7 @@ export const Navigation = (_props: {}) => {
             onClick={() => handleScroll('contact us')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
-            {t('اتصل بنا', 'Contact')}
+            {t('اتصل بنا', 'Contact Us')}
           </button>
 
           {/* Select لتغيير اللغة */}
