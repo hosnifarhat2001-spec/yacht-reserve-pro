@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { YachtCard } from '@/components/YachtCard';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { CartSheet } from '@/components/CartSheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Waves, Phone, Mail, MapPin } from 'lucide-react';
@@ -16,12 +14,8 @@ import { Yacht, Promotion } from '@/types';
 
 const Index = () => {
   const [yachts, setYachts] = useState<Yacht[]>([]);
-  const [filteredYachts, setFilteredYachts] = useState<Yacht[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchName, setSearchName] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
   const { t } = useLanguage();
 
   // WhatsApp contact configuration (loaded from settings for consistency)
@@ -86,7 +80,6 @@ const Index = () => {
       console.log('Loaded yachts:', yachtsData);
       setYachts(yachtsData || []);
       setPromotions(promotionsData || []);
-      setFilteredYachts(yachtsData || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error(t('حدث خطأ في تحميل البيانات', 'Error loading data'));
@@ -95,22 +88,7 @@ const Index = () => {
     }
   };
 
-  useEffect(() => {
-    filterYachts();
-  }, [searchName, minPrice, maxPrice, yachts]);
-
-  const filterYachts = () => {
-    let filtered = [...yachts];
-    if (searchName) {
-      filtered = filtered.filter(yacht => {
-        const name = yacht.name || '';
-        return name.toLowerCase().includes(searchName.toLowerCase());
-      });
-    }
-    if (minPrice) filtered = filtered.filter(yacht => (yacht.price_per_hour || 0) >= Number(minPrice));
-    if (maxPrice) filtered = filtered.filter(yacht => (yacht.price_per_hour || 0) <= Number(maxPrice));
-    setFilteredYachts(filtered);
-  };
+  // Removed search/filter: rendering all yachts directly
 
   if (loading) {
     return (
@@ -186,47 +164,16 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Search and Filter */}
-        <div className="max-w-4xl mx-auto mb-12 bg-card p-6 rounded-xl shadow-lg">
-          <h3 className="text-xl font-semibold mb-4 text-primary">{t('البحث والتصفية', 'Search & Filter')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>{t('اسم اليخت', 'Yacht Name')}</Label>
-              <Input
-                placeholder={t('ابحث بالاسم...', 'Search by name...')}
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>{t('السعر الأدنى', 'Min Price')}</Label>
-              <Input
-                type="number"
-                placeholder="AED 0"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>{t('السعر الأقصى', 'Max Price')}</Label>
-              <Input
-                type="number"
-                placeholder="AED 10000"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Search & Filter removed */}
 
         {/* Yacht Cards */}
-        {filteredYachts.length === 0 ? (
+        {yachts.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-xl text-muted-foreground">{t('لا توجد يخوت متاحة', 'No yachts available')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-            {filteredYachts.map((yacht, index) => {
+            {yachts.map((yacht, index) => {
               // Find active promotion for this specific yacht or global promotions
               const yachtPromo = promotions.find(
                 (p) => p.is_active &&

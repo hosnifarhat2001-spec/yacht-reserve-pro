@@ -45,6 +45,8 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
   const [featuresInput, setFeaturesInput] = useState('');
   const [yachtImages, setYachtImages] = useState<Array<{ id: string; image_url: string; display_order: number }>>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [newYachtImages, setNewYachtImages] = useState<File[]>([]);
+  const [newMainIndex, setNewMainIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (editingYacht) {
@@ -183,6 +185,55 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     }
   };
 
+  const handleSetMainImage = async (imageUrl: string) => {
+    if (!editingYacht) return;
+    try {
+      const { error } = await supabase
+        .from('yachts')
+        .update({ main_image: imageUrl })
+        .eq('id', editingYacht.id);
+      if (error) throw error;
+      setFormData((prev) => ({ ...prev, main_image: imageUrl }));
+      setEditingYacht({ ...(editingYacht as Yacht), main_image: imageUrl });
+      toast.success(t('تم تعيين الصورة الرئيسية', 'Main image set'));
+    } catch (e) {
+      console.error('Error setting main image:', e);
+      toast.error(t('فشل تعيين الصورة الرئيسية', 'Failed to set main image'));
+    }
+  };
+
+  const handleSelectNewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const selected = Array.from(files);
+    const total = newYachtImages.length + selected.length;
+    if (total > 4) {
+      toast.error(t('يمكنك إضافة 4 صور كحد أقصى', 'You can add maximum 4 images'));
+      return;
+    }
+
+    setNewYachtImages((prev) => {
+      const next = [...prev, ...selected];
+      if (prev.length === 0 && next.length > 0) setNewMainIndex(0);
+      return next;
+    });
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setNewYachtImages((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (newMainIndex !== null) {
+        if (index === newMainIndex) {
+          setNewMainIndex(next.length > 0 ? 0 : null);
+        } else if (index < newMainIndex) {
+          setNewMainIndex(newMainIndex - 1);
+        }
+      }
+      return next;
+    });
+  };
+
   const handleAddOption = async () => {
     if (!newOption.name || newOption.price <= 0) {
       toast.error(t('يرجى ملء جميع حقول الخيار', 'Please fill all option fields'));
@@ -292,6 +343,53 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
             throw new Error(optionsError.message || 'Failed to add options');
           }
         }
+
+        // Upload selected images (if any) and create yacht_images rows
+        if (newYacht && newYachtImages.length > 0) {
+          const uploadedUrls: string[] = [];
+          setUploadingImages(true);
+          try {
+            for (let i = 0; i < newYachtImages.length; i++) {
+              const file = newYachtImages[i];
+              const fileExt = file.name.split('.').pop();
+              const fileName = `${newYacht.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+              const filePath = `${fileName}`;
+
+              const { error: uploadError } = await supabase.storage
+                .from('yacht-images')
+                .upload(filePath, file);
+              if (uploadError) throw uploadError;
+
+              const { data: { publicUrl } } = supabase.storage
+                .from('yacht-images')
+                .getPublicUrl(filePath);
+              uploadedUrls.push(publicUrl);
+            }
+
+            // Insert rows into yacht_images with display_order
+            const imagesToInsert = uploadedUrls.map((url, index) => ({
+              yacht_id: newYacht.id,
+              image_url: url,
+              display_order: index,
+            }));
+            const { error: imagesError } = await supabase
+              .from('yacht_images')
+              .insert(imagesToInsert);
+            if (imagesError) throw imagesError;
+
+            // Set main_image to chosen preview (fallback to first)
+            const chosenIndex = newMainIndex ?? 0;
+            if (uploadedUrls[chosenIndex]) {
+              const { error: mainImgErr } = await supabase
+                .from('yachts')
+                .update({ main_image: uploadedUrls[chosenIndex] })
+                .eq('id', newYacht.id);
+              if (mainImgErr) throw mainImgErr;
+            }
+          } finally {
+            setUploadingImages(false);
+          }
+        }
         
         toast.success(t('تم إضافة اليخت بنجاح', 'Yacht added successfully'));
       }
@@ -352,6 +450,8 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     setEditingYacht(null);
     setYachtOptions([]);
     setYachtImages([]);
+    setNewYachtImages([]);
+    setNewMainIndex(null);
     setNewOption({ name: '', price: 0, description: '', is_active: true });
     setShowForm(false);
   };
@@ -475,7 +575,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 {t('صور اليخت', 'Yacht Images')} ({yachtImages.length}/4)
               </h3>
               
-              {yachtImages.length > 0 && (
+              {editingYacht && yachtImages.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {yachtImages.map((img, idx) => (
                     <div key={img.id} className="relative group rounded-lg overflow-hidden border">
@@ -484,12 +584,65 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                         alt={`Yacht ${idx + 1}`}
                         className="w-full h-32 object-cover"
                       />
+                      <div className="absolute top-2 left-2 flex gap-2">
+                        {formData.main_image === img.image_url ? (
+                          <span className="px-2 py-0.5 text-xs bg-primary text-white rounded">{t('رئيسية', 'Main')}</span>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleSetMainImage(img.image_url)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            {t('تعيين كصورة رئيسية', 'Set as main')}
+                          </Button>
+                        )}
+                      </div>
                       <Button
                         type="button"
                         size="icon"
                         variant="destructive"
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => handleDeleteImage(img.id, img.image_url)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!editingYacht && newYachtImages.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {newYachtImages.map((file, idx) => (
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${idx + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
+                      <div className="absolute top-2 left-2 flex gap-2">
+                        {newMainIndex === idx ? (
+                          <span className="px-2 py-0.5 text-xs bg-primary text-white rounded">{t('رئيسية', 'Main')}</span>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setNewMainIndex(idx)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            {t('تعيين كصورة رئيسية', 'Set as main')}
+                          </Button>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveNewImage(idx)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -529,9 +682,26 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 </div>
               )}
 
-              {!editingYacht && (
-                <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                  {t('يرجى حفظ اليخت أولاً لإضافة الصور', 'Please save the yacht first to add images')}
+              {!editingYacht && newYachtImages.length < 4 && (
+                <div>
+                  <Label 
+                    htmlFor="new-image-upload" 
+                    className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <Upload className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {t('اختر صورًا لإرفاقها عند إضافة اليخت (حتى 4 صور)', 'Choose images to attach when adding the yacht (up to 4)')}
+                    </span>
+                  </Label>
+                  <Input
+                    id="new-image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleSelectNewImages}
+                    disabled={uploadingImages}
+                  />
                 </div>
               )}
             </div>

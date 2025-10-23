@@ -28,20 +28,20 @@ export const Navigation = (_props: {}) => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary backdrop-blur-sm border-b border-primary-foreground/20">
-      <div className="flex items-center justify-between h-20 px-4">
+      <div className="flex items-center justify-between h-16 md:h-20 px-3 md:px-4">
         {/* Logo + Asfar */}
         <div
-          className="flex items-center gap-3 ml-0 pl-0 cursor-pointer"
+          className="flex items-center gap-2 md:gap-3 ml-0 pl-0 cursor-pointer shrink-0"
           onClick={() => handleScroll('home')}
         >
           <img
-            src={asfarLogo}
-            alt="Asfar Logo"
-            className="w-28 h-28 pt-2 group-hover:scale-110 transition-transform"
-          />
-          <span className="text-3xl font-bold text-primary-foreground font-['Playfair_Display']">
-            Asfar
-          </span>
+    src={asfarLogo}
+    alt="Asfar Logo"
+    className="h-40 md:h-24 lg:h-52 pt-5 w-auto object-contain group-hover:scale-110 transition-transform"
+  />
+  <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semiboldtext-primary-foreground font-['Playfair_Display']">
+    Asfar
+  </span>
         </div>
 
         {/* روابط القائمة + Desktop Language Selector */}
@@ -59,7 +59,7 @@ export const Navigation = (_props: {}) => {
             {t('اليخوت', 'Fleet')}
           </button>
           <button
-            onClick={() => handleScroll('contact us')}
+            onClick={() => handleScroll('contact')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('اتصل بنا', 'Contact Us')}

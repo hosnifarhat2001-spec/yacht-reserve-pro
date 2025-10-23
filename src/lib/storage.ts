@@ -94,6 +94,17 @@ export const yachtService = {
     return data || [];
   },
 
+  async getYachtById(id: string): Promise<Yacht | null> {
+    const { data, error } = await supabase
+      .from('yachts')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data || null;
+  },
+
   async addYacht(yacht: Omit<Yacht, 'id' | 'created_at' | 'updated_at'>): Promise<void> {
     const { error } = await supabase
       .from('yachts')

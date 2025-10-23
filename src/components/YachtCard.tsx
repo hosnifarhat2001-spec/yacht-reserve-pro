@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookingModal } from './BookingModal';
 import { Yacht, Promotion, YachtOption } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Ship, Users, Ruler, Calendar, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
-import { toast } from 'sonner';
+import { Ship, Users, Ruler, Check } from 'lucide-react';
 import { promotionService } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 import {
   Carousel,
   CarouselContent,
@@ -19,10 +17,7 @@ import {
 } from '@/components/ui/carousel';
 
 export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { t, language } = useLanguage();
-  const { addToCart, removeFromCart, isInCart } = useCart();
-  const inCart = isInCart(yacht.id);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [yachtOptions, setYachtOptions] = useState<YachtOption[]>([]);
   const [yachtImages, setYachtImages] = useState<Array<{ id: string; image_url: string }>>([]);
@@ -69,17 +64,6 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
       setYachtImages(data || []);
     } catch (error) {
       console.error('Error loading yacht images:', error);
-    }
-  };
-
-  const handleCartToggle = () => {
-    console.log('Cart toggle clicked for yacht:', yacht);
-    if (inCart) {
-      removeFromCart(yacht.id);
-      toast.success(t('تم الإزالة من القائمة', 'Removed from list'));
-    } else {
-      addToCart(yacht);
-      toast.success(t('تم الإضافة إلى القائمة', 'Added to list'));
     }
   };
 
@@ -198,24 +182,14 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
           )}
 
           <div className="flex gap-2 mt-auto">
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-gradient-ocean hover:opacity-90"
-              size="lg"
-            >
-              <Calendar className="w-4 h-4 ml-2" />
-              {t('احجز الآن', 'Book Now')}
+            <Button asChild className="flex-1 bg-gradient-ocean hover:opacity-90" size="lg">
+              <Link to={`/yacht/${yacht.id}`}>
+                {t('اقرأ المزيد', 'Read More')}
+              </Link>
             </Button>
-          
           </div>
         </div>
       </Card>
-
-      <BookingModal
-        yacht={yacht}
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </>
   );
 };

@@ -179,7 +179,7 @@ export const CartSheet = () => {
                         onClick={() => setSelectedYacht(yacht)}
                       >
                         <Calendar className="w-4 h-4 ml-1" />
-                        {t('احجز الآن', 'Book Now')}
+                        {t('احصل على أفضل سعر', 'Get Best Price')}
                       </Button>
                       <Button
                         variant="destructive"
