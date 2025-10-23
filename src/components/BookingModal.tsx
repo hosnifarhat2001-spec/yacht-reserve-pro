@@ -14,12 +14,35 @@ import { CalendarDays, CreditCard, User, MessageCircle, Clock } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { z } from 'zod';
 
 interface BookingModalProps {
   yacht: Yacht;
   open: boolean;
   onClose: () => void;
 }
+
+// Zod validation schema for booking form inputs
+const bookingSchema = z.object({
+  customerName: z.string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters')
+    .regex(/^[a-zA-Z\u0600-\u06FF\s'-]+$/, 'Name contains invalid characters'),
+  customerEmail: z.string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  customerPhone: z.string()
+    .trim()
+    .regex(/^\+?[0-9\s()-]{8,20}$/, 'Invalid phone number format')
+    .min(8, 'Phone number too short')
+    .max(20, 'Phone number too long'),
+  hours: z.number()
+    .int('Hours must be a whole number')
+    .min(1, 'Minimum 1 hour')
+    .max(72, 'Maximum 72 hours')
+});
 
 export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
   const { t, language } = useLanguage();
@@ -115,12 +138,20 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
   };
 
   const handleWhatsAppBooking = () => {
-    if (!customerName || !customerEmail || !customerPhone) {
-      toast.error(t('يرجى ملء جميع الحقول', 'Please fill all fields'));
-      return;
-    }
-    if (hours < 1) {
-      toast.error(t('يرجى إدخال عدد الساعات', 'Please enter number of hours'));
+    // Validate inputs using zod schema
+    try {
+      bookingSchema.parse({
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
+        customerPhone: customerPhone.trim(),
+        hours
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
+          toast.error(err.message);
+        });
+      }
       return;
     }
 
@@ -130,12 +161,21 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
   };
 
   const handleBooking = async () => {
-    if (!customerName || !customerEmail || !customerPhone) {
-      toast.error(t('يرجى ملء جميع الحقول', 'Please fill all fields'));
-      return;
-    }
-    if (hours < 1) {
-      toast.error(t('يرجى إدخال عدد الساعات', 'Please enter number of hours'));
+    // Validate inputs using zod schema
+    let validatedData;
+    try {
+      validatedData = bookingSchema.parse({
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
+        customerPhone: customerPhone.trim(),
+        hours
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
+          toast.error(err.message);
+        });
+      }
       return;
     }
 
@@ -143,15 +183,15 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
       const now = new Date();
       const booking = {
         yacht_id: yacht.id,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
+        customer_name: validatedData.customerName,
+        customer_email: validatedData.customerEmail,
+        customer_phone: validatedData.customerPhone,
         start_date: now.toISOString(),
-        end_date: new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString(),
+        end_date: new Date(now.getTime() + validatedData.hours * 60 * 60 * 1000).toISOString(),
         total_price: totalPrice,
         booking_source: 'direct' as const,
         duration_type: 'hourly' as const,
-        duration_value: hours,
+        duration_value: validatedData.hours,
       };
 
       const { data: bookingData, error: bookingError } = await supabase
