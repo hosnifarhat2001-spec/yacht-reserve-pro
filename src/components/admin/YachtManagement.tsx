@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, X, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, X, MapPin, Upload, Image as ImageIcon } from 'lucide-react';
 import { yachtService } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -43,10 +43,13 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     is_active: true,
   });
   const [featuresInput, setFeaturesInput] = useState('');
+  const [yachtImages, setYachtImages] = useState<Array<{ id: string; image_url: string; display_order: number }>>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     if (editingYacht) {
       loadYachtOptions(editingYacht.id);
+      loadYachtImages(editingYacht.id);
     }
   }, [editingYacht]);
 
@@ -88,6 +91,95 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       setYachtOptions(data || []);
     } catch (error) {
       console.error('Error loading options:', error);
+    }
+  };
+
+  const loadYachtImages = async (yachtId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('yacht_images')
+        .select('*')
+        .eq('yacht_id', yachtId)
+        .order('display_order');
+      
+      if (error) throw error;
+      setYachtImages(data || []);
+    } catch (error) {
+      console.error('Error loading images:', error);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editingYacht) {
+      toast.error(t('يرجى حفظ اليخت أولاً قبل إضافة الصور', 'Please save the yacht first before adding images'));
+      return;
+    }
+
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (yachtImages.length + files.length > 4) {
+      toast.error(t('يمكنك إضافة 4 صور كحد أقصى', 'You can add maximum 4 images'));
+      return;
+    }
+
+    setUploadingImages(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${editingYacht.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('yacht-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('yacht-images')
+          .getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase
+          .from('yacht_images')
+          .insert({
+            yacht_id: editingYacht.id,
+            image_url: publicUrl,
+            display_order: yachtImages.length
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success(t('تم رفع الصور بنجاح', 'Images uploaded successfully'));
+      loadYachtImages(editingYacht.id);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error(t('خطأ في رفع الصور', 'Error uploading images'));
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string, imageUrl: string) => {
+    try {
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('yacht-images').remove([fileName]);
+      }
+
+      const { error } = await supabase
+        .from('yacht_images')
+        .delete()
+        .eq('id', imageId);
+
+      if (error) throw error;
+
+      toast.success(t('تم حذف الصورة', 'Image deleted'));
+      if (editingYacht) loadYachtImages(editingYacht.id);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      toast.error(t('خطأ في حذف الصورة', 'Error deleting image'));
     }
   };
 
@@ -259,6 +351,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     setFeaturesInput('');
     setEditingYacht(null);
     setYachtOptions([]);
+    setYachtImages([]);
     setNewOption({ name: '', price: 0, description: '', is_active: true });
     setShowForm(false);
   };
@@ -274,24 +367,28 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {yachts.map((yacht) => (
-          <Card key={yacht.id} className="overflow-hidden">
-            <img src={yacht.main_image || ''} alt={yacht.name} className="w-full h-48 object-cover" />
-            <div className="p-4">
-              <h3 className="font-bold text-lg mb-2">{yacht.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{yacht.description}</p>
-              {/* Key facts */}
-              <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                <div>
-                  <span className="text-muted-foreground">{t('السعة', 'Capacity')}:</span> {yacht.capacity}
+        {yachts.map((yacht) => {
+          const images = optionsByYacht[yacht.id] || [];
+          return (
+            <Card key={yacht.id} className="overflow-hidden">
+              {yacht.main_image && (
+                <img src={yacht.main_image} alt={yacht.name} className="w-full h-48 object-cover" />
+              )}
+              <div className="p-4">
+                <h3 className="font-bold text-lg mb-2">{yacht.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{yacht.description}</p>
+                {/* Key facts */}
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <span className="text-muted-foreground">{t('السعة', 'Capacity')}:</span> {yacht.capacity}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">{t('الطول', 'Length')}:</span> {yacht.length ?? '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">{t('السعر/ساعة', 'Price/Hour')}:</span> {yacht.price_per_hour} AED
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">{t('الطول', 'Length')}:</span> {yacht.length ?? '-'}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">{t('السعر/ساعة', 'Price/Hour')}:</span> {yacht.price_per_hour} AED
-                </div>
-              </div>
 
               {/* Location */}
               {yacht.location && (
@@ -343,7 +440,8 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
               </div>
             </div>
           </Card>
-        ))}
+        );
+        })}
       </div>
 
       <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
@@ -371,13 +469,71 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
               />
             </div>
 
-            <div>
-              <Label>{t('رابط الصورة', 'Image URL')}</Label>
-              <Input
-                value={formData.main_image}
-                onChange={(e) => setFormData({ ...formData, main_image: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
+            {/* Yacht Images Section */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold mb-4">
+                {t('صور اليخت', 'Yacht Images')} ({yachtImages.length}/4)
+              </h3>
+              
+              {yachtImages.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {yachtImages.map((img, idx) => (
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border">
+                      <img 
+                        src={img.image_url} 
+                        alt={`Yacht ${idx + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteImage(img.id, img.image_url)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {editingYacht && yachtImages.length < 4 && (
+                <div>
+                  <Label 
+                    htmlFor="image-upload" 
+                    className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    {uploadingImages ? (
+                      <span className="text-sm text-muted-foreground">
+                        {t('جاري الرفع...', 'Uploading...')}
+                      </span>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {t('اضغط لرفع صور (حتى 4 صور)', 'Click to upload images (up to 4)')}
+                        </span>
+                      </>
+                    )}
+                  </Label>
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImages}
+                  />
+                </div>
+              )}
+
+              {!editingYacht && (
+                <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  {t('يرجى حفظ اليخت أولاً لإضافة الصور', 'Please save the yacht first to add images')}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -5,11 +5,18 @@ import { Badge } from '@/components/ui/badge';
 import { BookingModal } from './BookingModal';
 import { Yacht, Promotion, YachtOption } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Ship, Users, Ruler, Calendar, ShoppingCart, Check } from 'lucide-react';
+import { Ship, Users, Ruler, Calendar, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { toast } from 'sonner';
 import { promotionService } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,10 +25,12 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
   const inCart = isInCart(yacht.id);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [yachtOptions, setYachtOptions] = useState<YachtOption[]>([]);
+  const [yachtImages, setYachtImages] = useState<Array<{ id: string; image_url: string }>>([]);
 
   useEffect(() => {
     loadPromotions();
     loadYachtOptions();
+    loadYachtImages();
   }, [yacht.id]);
 
   const loadPromotions = async () => {
@@ -49,6 +58,20 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
     }
   };
 
+  const loadYachtImages = async () => {
+    try {
+      const { data } = await supabase
+        .from('yacht_images')
+        .select('id, image_url')
+        .eq('yacht_id', yacht.id)
+        .order('display_order');
+      
+      setYachtImages(data || []);
+    } catch (error) {
+      console.error('Error loading yacht images:', error);
+    }
+  };
+
   const handleCartToggle = () => {
     console.log('Cart toggle clicked for yacht:', yacht);
     if (inCart) {
@@ -66,12 +89,34 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
     <>
       <Card className="overflow-hidden group hover:shadow-2xl transition-all duration-300 animate-fade-in h-full flex flex-col">
         <div className="relative overflow-hidden h-64">
-          <img
-            src={yacht.main_image || ''}
-            alt={yacht.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          {yachtImages.length > 0 ? (
+            <Carousel className="w-full h-full">
+              <CarouselContent>
+                {yachtImages.map((img) => (
+                  <CarouselItem key={img.id}>
+                    <img
+                      src={img.image_url}
+                      alt={yacht.name}
+                      className="w-full h-64 object-cover"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {yachtImages.length > 1 && (
+                <>
+                  <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                  <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                </>
+              )}
+            </Carousel>
+          ) : (
+            <img
+              src={yacht.main_image || '/placeholder.svg'}
+              alt={yacht.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
         </div>
 
         <div className="p-6 space-y-4 flex-1 flex flex-col">
