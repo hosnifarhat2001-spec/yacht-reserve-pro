@@ -45,7 +45,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
   const [featuresInput, setFeaturesInput] = useState('');
   const [yachtImages, setYachtImages] = useState<Array<{ id: string; image_url: string; display_order: number }>>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
-  const [newYachtImages, setNewYachtImages] = useState<File[]>([]);
+  const [newYachtImages, setNewYachtImages] = useState<Array<{ file: File; displayOrder: number | null }>>([]);
   const [newMainIndex, setNewMainIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -231,7 +231,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     }
 
     setNewYachtImages((prev) => {
-      const next = [...prev, ...selected];
+      const next = [...prev, ...selected.map(file => ({ file, displayOrder: null }))];
       if (prev.length === 0 && next.length > 0) setNewMainIndex(0);
       return next;
     });
@@ -247,6 +247,14 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
           setNewMainIndex(newMainIndex - 1);
         }
       }
+      return next;
+    });
+  };
+
+  const handleSetNewImageDisplayOrder = (index: number, order: number) => {
+    setNewYachtImages((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], displayOrder: order };
       return next;
     });
   };
@@ -363,11 +371,11 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
 
         // Upload selected images (if any) and create yacht_images rows
         if (newYacht && newYachtImages.length > 0) {
-          const uploadedUrls: string[] = [];
+          const uploadedData: Array<{ url: string; displayOrder: number | null }> = [];
           setUploadingImages(true);
           try {
             for (let i = 0; i < newYachtImages.length; i++) {
-              const file = newYachtImages[i];
+              const { file, displayOrder } = newYachtImages[i];
               const fileExt = file.name.split('.').pop();
               const fileName = `${newYacht.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
               const filePath = `${fileName}`;
@@ -380,14 +388,14 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
               const { data: { publicUrl } } = supabase.storage
                 .from('yacht-images')
                 .getPublicUrl(filePath);
-              uploadedUrls.push(publicUrl);
+              uploadedData.push({ url: publicUrl, displayOrder });
             }
 
             // Insert rows into yacht_images with display_order
-            const imagesToInsert = uploadedUrls.map((url, index) => ({
+            const imagesToInsert = uploadedData.map(({ url, displayOrder }, index) => ({
               yacht_id: newYacht.id,
               image_url: url,
-              display_order: index,
+              display_order: displayOrder ?? index,
             }));
             const { error: imagesError } = await supabase
               .from('yacht_images')
@@ -396,10 +404,10 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
 
             // Set main_image to chosen preview (fallback to first)
             const chosenIndex = newMainIndex ?? 0;
-            if (uploadedUrls[chosenIndex]) {
+            if (uploadedData[chosenIndex]) {
               const { error: mainImgErr } = await supabase
                 .from('yachts')
-                .update({ main_image: uploadedUrls[chosenIndex] })
+                .update({ main_image: uploadedData[chosenIndex].url })
                 .eq('id', newYacht.id);
               if (mainImgErr) throw mainImgErr;
             }
@@ -647,10 +655,10 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
 
               {!editingYacht && newYachtImages.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  {newYachtImages.map((file, idx) => (
+                  {newYachtImages.map((item, idx) => (
                     <div key={idx} className="relative group rounded-lg overflow-hidden border">
                       <img
-                        src={URL.createObjectURL(file)}
+                        src={URL.createObjectURL(item.file)}
                         alt={`Preview ${idx + 1}`}
                         className="w-full h-32 object-cover"
                       />
@@ -668,6 +676,21 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                             {t('تعيين كصورة رئيسية', 'Set as main')}
                           </Button>
                         )}
+                      </div>
+                      <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap max-w-[140px]">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(order => (
+                          <Button
+                            key={order}
+                            type="button"
+                            size="sm"
+                            variant={item.displayOrder === order ? "default" : "outline"}
+                            onClick={() => handleSetNewImageDisplayOrder(idx, order)}
+                            className="h-6 w-6 p-0 text-xs"
+                            title={t(`تعيين كصورة مميزة #${order}`, `Set as featured #${order}`)}
+                          >
+                            {order}
+                          </Button>
+                        ))}
                       </div>
                       <Button
                         type="button"
