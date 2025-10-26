@@ -120,8 +120,8 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (yachtImages.length + files.length > 4) {
-      toast.error(t('يمكنك إضافة 4 صور كحد أقصى', 'You can add maximum 4 images'));
+    if (yachtImages.length + files.length > 10) {
+      toast.error(t('يمكنك إضافة 10 صور كحد أقصى', 'You can add maximum 10 images'));
       return;
     }
 
@@ -208,8 +208,8 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
 
     const selected = Array.from(files);
     const total = newYachtImages.length + selected.length;
-    if (total > 4) {
-      toast.error(t('يمكنك إضافة 4 صور كحد أقصى', 'You can add maximum 4 images'));
+    if (total > 10) {
+      toast.error(t('يمكنك إضافة 10 صور كحد أقصى', 'You can add maximum 10 images'));
       return;
     }
 
