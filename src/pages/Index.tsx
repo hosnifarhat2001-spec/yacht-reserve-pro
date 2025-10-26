@@ -16,7 +16,6 @@ const Index = () => {
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [featuredImages, setFeaturedImages] = useState<{ image_url: string; yacht_name: string; yacht_id: string }[]>([]);
   const { t } = useLanguage();
 
   // WhatsApp contact configuration (loaded from settings for consistency)
@@ -25,7 +24,6 @@ const Index = () => {
 
   useEffect(() => {
     loadData();
-    loadFeaturedImages();
     
     // Set up real-time subscriptions for instant updates
     const yachtsChannel = supabase
@@ -52,22 +50,9 @@ const Index = () => {
       )
       .subscribe();
 
-    const imagesChannel = supabase
-      .channel('yacht-images-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'yacht_images' },
-        (payload) => {
-          console.log('Yacht images change detected:', payload);
-          loadFeaturedImages();
-        }
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(yachtsChannel);
       supabase.removeChannel(promotionsChannel);
-      supabase.removeChannel(imagesChannel);
     };
   }, []);
 
@@ -100,28 +85,6 @@ const Index = () => {
       toast.error(t('حدث خطأ في تحميل البيانات', 'Error loading data'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadFeaturedImages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('yacht_images')
-        .select('image_url, display_order, yachts(id, name)')
-        .in('display_order', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-
-      const featured = data?.map(item => ({
-        image_url: item.image_url,
-        yacht_name: (item.yachts as any)?.name || '',
-        yacht_id: (item.yachts as any)?.id || ''
-      })) || [];
-
-      setFeaturedImages(featured);
-    } catch (error) {
-      console.error('Error loading featured images:', error);
     }
   };
 
@@ -188,43 +151,6 @@ const Index = () => {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
-
-      {/* Featured Images Section */}
-      {featuredImages.length > 0 && (
-        <section className="container mx-auto px-4 py-20">
-          <div className="text-center mb-12 animate-slide-up">
-            <h2 className="text-4xl font-bold mb-4 text-primary">{t('صور مميزة', 'Featured Gallery')}</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t('استمتع بأفضل اللحظات من أسطولنا الفاخر', 'Experience the finest moments from our luxury fleet')}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {featuredImages.map((featured, index) => (
-              <div 
-                key={index} 
-                className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                onClick={() => window.location.href = `/yacht/${featured.yacht_id}`}
-              >
-                <div className="aspect-[4/3] relative">
-                  <img 
-                    src={featured.image_url} 
-                    alt={featured.yacht_name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    <h3 className="text-2xl font-bold mb-2">{featured.yacht_name}</h3>
-                    <p className="text-sm opacity-90">{t('اضغط للمشاهدة', 'Click to view')}</p>
-                  </div>
-                </div>
-                <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-bold">
-                  #{index + 1}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Yachts Section */}
       <section id="yachts" className="container mx-auto px-4 py-20">
