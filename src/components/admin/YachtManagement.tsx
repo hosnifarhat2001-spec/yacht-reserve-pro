@@ -616,15 +616,15 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                           </Button>
                         )}
                       </div>
-                      <div className="absolute bottom-2 left-2 flex gap-1">
-                        {[1, 2, 3].map(order => (
+                      <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap max-w-[140px]">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(order => (
                           <Button
                             key={order}
                             type="button"
                             size="sm"
                             variant={img.display_order === order ? "default" : "outline"}
                             onClick={() => handleSetDisplayOrder(img.id, order)}
-                            className="h-7 w-7 p-0 text-xs"
+                            className="h-6 w-6 p-0 text-xs"
                             title={t(`تعيين كصورة مميزة #${order}`, `Set as featured #${order}`)}
                           >
                             {order}

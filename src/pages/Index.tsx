@@ -108,7 +108,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from('yacht_images')
         .select('image_url, display_order, yachts(id, name)')
-        .in('display_order', [1, 2, 3])
+        .in('display_order', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         .order('display_order', { ascending: true });
 
       if (error) throw error;
@@ -198,7 +198,7 @@ const Index = () => {
               {t('استمتع بأفضل اللحظات من أسطولنا الفاخر', 'Experience the finest moments from our luxury fleet')}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {featuredImages.map((featured, index) => (
               <div 
                 key={index} 
