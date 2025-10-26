@@ -202,6 +202,23 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
     }
   };
 
+  const handleSetDisplayOrder = async (imageId: string, order: number) => {
+    if (!editingYacht) return;
+    try {
+      const { error } = await supabase
+        .from('yacht_images')
+        .update({ display_order: order })
+        .eq('id', imageId);
+      
+      if (error) throw error;
+      await loadYachtImages(editingYacht.id);
+      toast.success(t(`تم تعيين كصورة مميزة #${order}`, `Set as featured #${order}`));
+    } catch (e) {
+      console.error('Error setting display order:', e);
+      toast.error(t('فشل تعيين الترتيب', 'Failed to set display order'));
+    }
+  };
+
   const handleSelectNewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -584,7 +601,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                         alt={`Yacht ${idx + 1}`}
                         className="w-full h-32 object-cover"
                       />
-                      <div className="absolute top-2 left-2 flex gap-2">
+                      <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
                         {formData.main_image === img.image_url ? (
                           <span className="px-2 py-0.5 text-xs bg-primary text-white rounded">{t('رئيسية', 'Main')}</span>
                         ) : (
@@ -598,6 +615,21 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                             {t('تعيين كصورة رئيسية', 'Set as main')}
                           </Button>
                         )}
+                      </div>
+                      <div className="absolute bottom-2 left-2 flex gap-1">
+                        {[1, 2, 3].map(order => (
+                          <Button
+                            key={order}
+                            type="button"
+                            size="sm"
+                            variant={img.display_order === order ? "default" : "outline"}
+                            onClick={() => handleSetDisplayOrder(img.id, order)}
+                            className="h-7 w-7 p-0 text-xs"
+                            title={t(`تعيين كصورة مميزة #${order}`, `Set as featured #${order}`)}
+                          >
+                            {order}
+                          </Button>
+                        ))}
                       </div>
                       <Button
                         type="button"
