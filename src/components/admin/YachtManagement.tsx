@@ -572,7 +572,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
             {/* Yacht Images Section */}
             <div className="border-t pt-4 mt-4">
               <h3 className="text-lg font-semibold mb-4">
-                {t('صور اليخت', 'Yacht Images')} ({yachtImages.length}/4)
+                {t('صور اليخت', 'Yacht Images')} ({yachtImages.length}/10)
               </h3>
               
               {editingYacht && yachtImages.length > 0 && (
@@ -651,7 +651,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 </div>
               )}
 
-              {editingYacht && yachtImages.length < 4 && (
+              {editingYacht && yachtImages.length < 10 && (
                 <div>
                   <Label 
                     htmlFor="image-upload" 
@@ -665,7 +665,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                       <>
                         <Upload className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          {t('اضغط لرفع صور (حتى 4 صور)', 'Click to upload images (up to 4)')}
+                          {t('اضغط لرفع صور (حتى 10 صور)', 'Click to upload images (up to 10)')}
                         </span>
                       </>
                     )}
@@ -682,7 +682,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                 </div>
               )}
 
-              {!editingYacht && newYachtImages.length < 4 && (
+              {!editingYacht && newYachtImages.length < 10 && (
                 <div>
                   <Label 
                     htmlFor="new-image-upload" 
@@ -690,7 +690,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
                   >
                     <Upload className="w-5 h-5 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {t('اختر صورًا لإرفاقها عند إضافة اليخت (حتى 4 صور)', 'Choose images to attach when adding the yacht (up to 4)')}
+                      {t('اختر صورًا لإرفاقها عند إضافة اليخت (حتى 10 صور)', 'Choose images to attach when adding the yacht (up to 10)')}
                     </span>
                   </Label>
                   <Input
