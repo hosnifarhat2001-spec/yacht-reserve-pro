@@ -536,9 +536,6 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
               </div>
 
               <div className="space-y-3">
-                <Button onClick={handleBooking} className="w-full bg-gradient-gold hover:opacity-90" size="lg">
-                  {t('تأكيد الحجز مباشرة', 'Confirm Booking Directly')}
-                </Button>
                 <Button 
                   onClick={handleWhatsAppBooking} 
                   variant="outline" 
