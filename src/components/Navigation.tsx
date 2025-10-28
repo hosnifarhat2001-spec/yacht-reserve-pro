@@ -59,6 +59,18 @@ export const Navigation = (_props: {}) => {
             {t('اليخوت', 'Fleet')}
           </button>
           <button
+            onClick={() => navigate('/water-sports')}
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
+          >
+            Water Sports
+          </button>
+          <button
+            onClick={() => navigate('/food')}
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
+          >
+            Food
+          </button>
+          <button
             onClick={() => handleScroll('contact')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
@@ -111,6 +123,18 @@ export const Navigation = (_props: {}) => {
               className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               {t('اليخوت', 'Fleet')}
+            </button>
+            <button
+              onClick={() => navigate('/water-sports')}
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
+            >
+              Water Sports
+            </button>
+            <button
+              onClick={() => navigate('/food')}
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
+            >
+              Food
             </button>
             <button
               onClick={() => handleScroll('contact')}

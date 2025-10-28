@@ -159,6 +159,42 @@ export type Database = {
           },
         ]
       }
+      food_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price_per_person: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price_per_person: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price_per_person?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -287,6 +323,42 @@ export type Database = {
           },
         ]
       }
+      service_cart_items: {
+        Row: {
+          created_at: string
+          duration: number | null
+          id: string
+          item_id: string
+          item_name: string
+          item_type: string
+          price: number
+          quantity: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          id?: string
+          item_id: string
+          item_name: string
+          item_type: string
+          price: number
+          quantity?: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          id?: string
+          item_id?: string
+          item_name?: string
+          item_type?: string
+          price?: number
+          quantity?: number
+          session_id?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
@@ -329,6 +401,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      water_sports: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          pax: number
+          price_30min: number
+          price_60min: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          pax: number
+          price_30min: number
+          price_60min: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          pax?: number
+          price_30min?: number
+          price_60min?: number
+          updated_at?: string
         }
         Relationships: []
       }
