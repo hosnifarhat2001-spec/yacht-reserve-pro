@@ -21,8 +21,10 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
     name: "",
     price_per_person: 0,
     description: "",
+    image_url: "",
     display_order: 0,
   });
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +71,33 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
   const resetForm = () => {
     setEditingId(null);
     setIsCreating(false);
-    setFormData({ name: "", price_per_person: 0, description: "", display_order: 0 });
+    setFormData({ name: "", price_per_person: 0, description: "", image_url: "", display_order: 0 });
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const ext = file.name.split('.').pop();
+      const filePath = `food/${(window.crypto?.randomUUID?.() || Date.now().toString())}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('food-images')
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: pub } = supabase.storage.from('food-images').getPublicUrl(filePath);
+      const publicUrl = pub.publicUrl;
+      setFormData((prev) => ({ ...prev, image_url: publicUrl }));
+      toast({ title: 'Image uploaded' });
+    } catch (err: any) {
+      console.error('Image upload failed:', err);
+      toast({ title: 'Upload failed', description: err.message || 'Please try again', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      // Clear the input value so same file can be reselected if needed
+      e.currentTarget.value = '';
+    }
   };
 
   return (
@@ -112,6 +140,23 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
                 />
               </div>
               <div>
+                <Label>Upload Image</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="file" accept="image/*" onChange={handleImageSelect} disabled={uploading} />
+                  <Button type="button" variant="outline" disabled>
+                    {uploading ? 'Uploading...' : 'Select'}
+                  </Button>
+                </div>
+                {formData.image_url && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <img src={formData.image_url} alt="Preview" className="w-24 h-24 object-cover rounded border" />
+                    <Button type="button" variant="ghost" onClick={() => setFormData({ ...formData, image_url: '' })}>
+                      Remove image
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <div>
                 <Label>Display Order</Label>
                 <Input
                   type="number"
@@ -136,12 +181,19 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
         {foodItems.map((item) => (
           <Card key={item.id}>
             <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
                   <h3 className="text-xl font-bold">{item.name}</h3>
                   <p className="text-muted-foreground mt-1">{item.description}</p>
                   <p className="mt-2 text-lg font-semibold">{item.price_per_person} AED per person</p>
                 </div>
+                {item.image_url && (
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-24 h-24 object-cover rounded-md border"
+                  />
+                )}
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => startEdit(item)}>
                     <Pencil size={16} />

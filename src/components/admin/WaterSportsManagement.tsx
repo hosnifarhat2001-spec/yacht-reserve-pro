@@ -21,8 +21,10 @@ const WaterSportsManagement = ({ activities, onUpdate }: WaterSportsManagementPr
     pax: 0,
     price_30min: 0,
     price_60min: 0,
+    image_url: "",
     display_order: 0,
   });
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +71,32 @@ const WaterSportsManagement = ({ activities, onUpdate }: WaterSportsManagementPr
   const resetForm = () => {
     setEditingId(null);
     setIsCreating(false);
-    setFormData({ name: "", pax: 0, price_30min: 0, price_60min: 0, display_order: 0 });
+    setFormData({ name: "", pax: 0, price_30min: 0, price_60min: 0, image_url: "", display_order: 0 });
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const ext = file.name.split('.').pop();
+      const filePath = `sports/${(window.crypto?.randomUUID?.() || Date.now().toString())}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('water-sports-images')
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: pub } = supabase.storage.from('water-sports-images').getPublicUrl(filePath);
+      const publicUrl = pub.publicUrl;
+      setFormData((prev) => ({ ...prev, image_url: publicUrl }));
+      toast({ title: 'Image uploaded' });
+    } catch (err: any) {
+      console.error('Image upload failed:', err);
+      toast({ title: 'Upload failed', description: err.message || 'Please try again', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      e.currentTarget.value = '';
+    }
   };
 
   return (
@@ -130,6 +157,23 @@ const WaterSportsManagement = ({ activities, onUpdate }: WaterSportsManagementPr
                   value={formData.display_order}
                   onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
                 />
+              </div>
+              <div>
+                <Label>Upload Image</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="file" accept="image/*" onChange={handleImageSelect} disabled={uploading} />
+                  <Button type="button" variant="outline" disabled>
+                    {uploading ? 'Uploading...' : 'Select'}
+                  </Button>
+                </div>
+                {formData.image_url && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <img src={formData.image_url} alt="Preview" className="w-24 h-24 object-cover rounded border" />
+                    <Button type="button" variant="ghost" onClick={() => setFormData({ ...formData, image_url: '' })}>
+                      Remove image
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button type="submit">

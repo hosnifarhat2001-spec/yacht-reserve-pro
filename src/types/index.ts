@@ -2,6 +2,7 @@ export interface Yacht {
   id: string;
   name: string;
   description: string;
+  description_ar?: string;
   main_image: string;
   capacity: number;
   length?: number;

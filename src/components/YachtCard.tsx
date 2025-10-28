@@ -103,91 +103,34 @@ export const YachtCard = ({ yacht }: { yacht: Yacht }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
         </div>
 
-        <div className="p-6 space-y-4 flex-1 flex flex-col">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-primary mb-2">
-                {yacht.name}
-              </h3>
-              <p className="text-muted-foreground line-clamp-3 text-sm">
-                {yacht.description}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="rounded-xl px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-lg shrink-0">
-                <div className="text-[11px] leading-none opacity-95">
-                  {t('ابتداءً من', 'From')}
-                </div>
-                <div className="text-2xl font-extrabold leading-tight">
-                  {Number(yacht.price_per_hour || 0).toFixed(0)}
-                  <span className="text-sm font-semibold ml-1">AED</span>
-                </div>
-                <div className="text-[11px] leading-none opacity-95">
-                  {t('للـساعة', 'per hour')}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="p-6 flex-1 flex flex-col items-center text-center">
+          <h3 className="text-2xl font-semibold text-foreground/90 mb-2">{yacht.name}</h3>
 
-          <div className="grid grid-cols-2 gap-3 py-4 border-t border-b">
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="w-4 h-4 text-primary" />
-              <span>{yacht.capacity} {t('أشخاص', 'Guests')}</span>
-            </div>
-            {yacht.length && yacht.length > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <Ruler className="w-4 h-4 text-primary" />
-                <span>{yacht.length}m {t('طول', 'Length')}</span>
+          <div className="w-full border-t" />
+
+          <div className="w-full py-4 space-y-2">
+            {yacht.length && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t('الطول', 'Long')}:</span>
+                <span className="font-semibold ml-1">{yacht.length} Ft</span>
               </div>
             )}
-            {yacht.location && yacht.location.trim().length > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <Ship className="w-4 h-4 text-primary" />
-                <span>{yacht.location}</span>
-              </div>
-            )}
+            <div className="text-sm">
+              <span className="text-muted-foreground">{t('السعة', 'capacity')}:</span>
+              <span className="font-semibold ml-1">{yacht.capacity} {t('أشخاص', 'Pax')}</span>
+            </div>
           </div>
 
-          {/* Display Yacht Options */}
-          {yachtOptions.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-primary">
-                {t('خيارات متاحة:', 'Available Options:')}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {yachtOptions.map((option) => (
-                  <Badge key={option.id} variant="outline" className="text-xs">
-                    {option.name} (+{option.price} AED)
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="w-full border-t" />
 
-          {/* Display Yacht Features */}
-          {yacht.features && yacht.features.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-primary">
-                {t('مميزات اليخت:', 'Yacht Features:')}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {yacht.features.slice(0, 6).map((feature: string, idx: number) => (
-                  <Badge key={idx} variant="outline" className="text-xs flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    {feature}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-auto">
-            <Button asChild className="flex-1 bg-gradient-ocean hover:opacity-90" size="lg">
-              <Link to={`/yacht/${yacht.id}`}>
-                {t('اقرأ المزيد', 'Read More')}
-              </Link>
-            </Button>
+          <div className="mt-4 text-amber-600 font-extrabold text-2xl">
+            {Number(yacht.price_per_hour || 0).toFixed(0)}
+            <span className="text-base font-semibold ml-1">{t('د.إ', 'AED')}</span>
           </div>
+
+          <Button asChild className="mt-4 px-8 rounded-md border border-foreground/30 bg-foreground/90 text-background hover:bg-foreground" size="lg">
+            <Link to={`/yacht/${yacht.id}`}>{t('اقرأ المزيد', 'Read More')}</Link>
+          </Button>
         </div>
       </Card>
     </>
