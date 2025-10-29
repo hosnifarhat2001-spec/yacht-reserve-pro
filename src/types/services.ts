@@ -23,6 +23,18 @@ export interface FoodItem {
   updated_at?: string;
 }
 
+export interface AdditionalService {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string;
+  description?: string;
+  is_active?: boolean;
+  display_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ServiceCartItem {
   id: string;
   session_id: string;

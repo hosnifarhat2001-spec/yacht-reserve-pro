@@ -10,6 +10,7 @@ import { DashboardStats } from '@/components/admin/DashboardStats';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
 import WaterSportsManagement from '@/components/admin/WaterSportsManagement';
 import FoodManagement from '@/components/admin/FoodManagement';
+import AdditionalServicesManagement from '@/components/admin/AdditionalServicesManagement';
 import { yachtService, bookingService, clientService, promotionService } from '@/lib/storage';
 import { Yacht, Booking, Client, Promotion } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [waterSports, setWaterSports] = useState<any[]>([]);
   const [foodItems, setFoodItems] = useState<any[]>([]);
+  const [additionalServices, setAdditionalServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('stats');
 
@@ -81,9 +83,10 @@ const AdminDashboard = () => {
         promotionService.getPromotions(),
       ]);
       
-      // Load water sports and food items
+      // Load water sports, food items, and additional services
       const { data: waterSportsData } = await supabase.from("water_sports").select("*").order("display_order");
       const { data: foodItemsData } = await supabase.from("food_items").select("*").order("display_order");
+      const { data: additionalServicesData } = await supabase.from("additional_services").select("*").order("display_order");
       
       setYachts(yachtsData);
       setBookings(bookingsData);
@@ -91,6 +94,7 @@ const AdminDashboard = () => {
       setPromotions(promotionsData);
       setWaterSports(waterSportsData || []);
       setFoodItems(foodItemsData || []);
+      setAdditionalServices(additionalServicesData || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -138,7 +142,7 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">{t('الإحصائيات', 'Statistics')}</span>
@@ -163,6 +167,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="food" className="flex items-center gap-2">
               <Tag className="w-4 h-4" />
               <span className="hidden sm:inline">Food</span>
+            </TabsTrigger>
+            <TabsTrigger value="additional-services" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Services</span>
             </TabsTrigger>
             <TabsTrigger value="promotions" className="flex items-center gap-2">
               <Tag className="w-4 h-4" />
@@ -197,6 +205,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="food">
             <FoodManagement foodItems={foodItems} onUpdate={loadData} />
+          </TabsContent>
+
+          <TabsContent value="additional-services">
+            <AdditionalServicesManagement services={additionalServices} onUpdate={loadData} />
           </TabsContent>
 
         <TabsContent value="promotions">

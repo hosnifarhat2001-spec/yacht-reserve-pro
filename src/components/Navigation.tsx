@@ -71,6 +71,12 @@ export const Navigation = (_props: {}) => {
             Food
           </button>
           <button
+            onClick={() => navigate('/additional-services')}
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
+          >
+            {t('خدمات إضافية', 'Additional Services')}
+          </button>
+          <button
             onClick={() => handleScroll('contact')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
@@ -135,6 +141,12 @@ export const Navigation = (_props: {}) => {
               className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               Food
+            </button>
+            <button
+              onClick={() => navigate('/additional-services')}
+              className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
+            >
+              {t('خدمات إضافية', 'Additional Services')}
             </button>
             <button
               onClick={() => handleScroll('contact')}

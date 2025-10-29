@@ -11,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import WaterSports from "./pages/WaterSports";
 import Food from "./pages/Food";
+import AdditionalServices from "./pages/AdditionalServices";
 import ServiceCart from "./pages/ServiceCart";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/water-sports" element={<WaterSports />} />
               <Route path="/food" element={<Food />} />
+              <Route path="/additional-services" element={<AdditionalServices />} />
               <Route path="/cart" element={<ServiceCart />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
