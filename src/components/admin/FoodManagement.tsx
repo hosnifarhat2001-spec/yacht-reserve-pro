@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -16,7 +17,7 @@ interface FoodManagementProps {
 
 const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Partial<FoodItem>>({
     name: "",
     price_per_person: 0,
@@ -25,6 +26,7 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
     display_order: 0,
   });
   const [uploading, setUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +67,12 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
   const startEdit = (item: FoodItem) => {
     setEditingId(item.id);
     setFormData(item);
-    setIsCreating(true);
+    setShowForm(true);
   };
 
   const resetForm = () => {
     setEditingId(null);
-    setIsCreating(false);
+    setShowForm(false);
     setFormData({ name: "", price_per_person: 0, description: "", image_url: "", display_order: 0 });
   };
 
@@ -102,113 +104,134 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3 flex-wrap">
         <h2 className="text-2xl font-bold">Food Menu Management</h2>
-        <Button onClick={() => setIsCreating(true)}>
+        <div className="flex items-center gap-2 ml-auto">
+          <Input
+            placeholder="Search food..."
+            className="w-56"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button variant="outline" onClick={() => setSearchQuery("")}>Clear</Button>
+        </div>
+        <Button onClick={() => { setEditingId(null); setFormData({ name: "", price_per_person: 0, description: "", image_url: "", display_order: 0 }); setShowForm(true); }}>
           <Plus className="mr-2" size={16} />
           Add Food Item
         </Button>
       </div>
 
-      {isCreating && (
-        <Card>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label>Item Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Price Per Person (AED)</Label>
-                <Input
-                  type="number"
-                  value={formData.price_per_person}
-                  onChange={(e) => setFormData({ ...formData, price_per_person: parseFloat(e.target.value) })}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label>Upload Image</Label>
-                <Input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageSelect} 
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-                {uploading && <p className="text-sm text-muted-foreground mt-2">Uploading image...</p>}
-                {formData.image_url && (
-                  <div className="mt-3 flex items-center gap-3">
-                    <img src={formData.image_url} alt="Preview" className="w-24 h-24 object-cover rounded border" />
-                    <Button type="button" variant="ghost" onClick={() => setFormData({ ...formData, image_url: '' })}>
-                      Remove image
-                    </Button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label>Display Order</Label>
-                <Input
-                  type="number"
-                  value={formData.display_order}
-                  onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
-                />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {foodItems
+          .filter((item) => {
+            const q = searchQuery.trim().toLowerCase();
+            if (!q) return true;
+            return (
+              item.name.toLowerCase().includes(q) ||
+              (item.description || "").toLowerCase().includes(q)
+            );
+          })
+          .map((item) => (
+          <Card key={item.id} className="overflow-hidden">
+            {item.image_url && (
+              <img src={item.image_url} alt={item.name} className="w-full h-48 object-cover" />
+            )}
+            <div className="p-4">
+              <h3 className="font-bold text-lg mb-2">{item.name}</h3>
+              {item.description && (
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
+              )}
+              <div className="text-sm mb-4">
+                <span className="text-muted-foreground">Price/Person:</span> {item.price_per_person} AED
               </div>
               <div className="flex gap-2">
-                <Button type="submit">
-                  {editingId ? "Update" : "Create"}
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => startEdit(item)}>
+                  <Pencil size={16} />
                 </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
+                <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDelete(item.id)}>
+                  <Trash2 size={16} />
                 </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-4">
-        {foodItems.map((item) => (
-          <Card key={item.id}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold">{item.name}</h3>
-                  <p className="text-muted-foreground mt-1">{item.description}</p>
-                  <p className="mt-2 text-lg font-semibold">{item.price_per_person} AED per person</p>
-                </div>
-                {item.image_url && (
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-24 h-24 object-cover rounded-md border"
-                  />
-                )}
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => startEdit(item)}>
-                    <Pencil size={16} />
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
+            </div>
           </Card>
         ))}
       </div>
+
+      <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? 'Edit Food Item' : 'Add Food Item'}
+            </DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label>Item Name</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Price Per Person (AED)</Label>
+                  <Input
+                    type="number"
+                    value={formData.price_per_person}
+                    onChange={(e) => setFormData({ ...formData, price_per_person: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>Upload Image</Label>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageSelect} 
+                    disabled={uploading}
+                    className="cursor-pointer"
+                  />
+                  {uploading && <p className="text-sm text-muted-foreground mt-2">Uploading image...</p>}
+                  {formData.image_url && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <img src={formData.image_url} alt="Preview" className="w-24 h-24 object-cover rounded border" />
+                      <Button type="button" variant="ghost" onClick={() => setFormData({ ...formData, image_url: '' })}>
+                        Remove image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label>Display Order</Label>
+                  <Input
+                    type="number"
+                    value={formData.display_order}
+                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit">
+                    {editingId ? "Update" : "Create"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

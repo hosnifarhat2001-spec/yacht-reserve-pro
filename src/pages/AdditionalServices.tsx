@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { AdditionalService } from "@/types/services";
 import { ShoppingCart } from "lucide-react";
+import { AdditionalServiceCard } from "@/components/AdditionalServiceCard";
 
 const AdditionalServices = () => {
   const { language, t } = useLanguage();
@@ -35,10 +35,7 @@ const AdditionalServices = () => {
     }
   };
 
-  const handleAddToCart = (service: AdditionalService) => {
-    toast.success(`${service.name} added to cart!`);
-    // TODO: Implement cart functionality
-  };
+  // Booking is handled in the card via WhatsApp CTA
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,49 +66,7 @@ const AdditionalServices = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
-              <Card
-                key={service.id}
-                className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group"
-              >
-                <div className="relative h-48 overflow-hidden bg-muted">
-                  {service.image_url ? (
-                    <img
-                      src={service.image_url}
-                      alt={service.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <ShoppingCart className="w-16 h-16" />
-                    </div>
-                  )}
-                </div>
-                
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-2">
-                    {service.name}
-                  </h3>
-                  {service.description && (
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {service.description}
-                    </p>
-                  )}
-                  <p className="text-2xl font-bold text-primary">
-                    {service.price} {t("درهم", "AED")}
-                  </p>
-                </CardContent>
-                
-                <CardFooter className="p-6 pt-0">
-                  <Button
-                    onClick={() => handleAddToCart(service)}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    {t("أضف إلى السلة", "Add to Cart")}
-                  </Button>
-                </CardFooter>
-              </Card>
+              <AdditionalServiceCard key={service.id} service={service} />
             ))}
           </div>
         )}

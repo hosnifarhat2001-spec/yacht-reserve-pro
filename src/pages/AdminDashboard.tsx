@@ -4,15 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, Ship, Calendar, Tag, BarChart, Settings } from 'lucide-react';
 import { YachtManagement } from '@/components/admin/YachtManagement';
-import { BookingManagement } from '@/components/admin/BookingManagement';
 import { PromotionsManagement } from '@/components/admin/PromotionsManagement';
 import { DashboardStats } from '@/components/admin/DashboardStats';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
 import WaterSportsManagement from '@/components/admin/WaterSportsManagement';
 import FoodManagement from '@/components/admin/FoodManagement';
 import AdditionalServicesManagement from '@/components/admin/AdditionalServicesManagement';
-import { yachtService, bookingService, clientService, promotionService } from '@/lib/storage';
-import { Yacht, Booking, Client, Promotion } from '@/types';
+import { yachtService, clientService, promotionService } from '@/lib/storage';
+import { Yacht, Client, Promotion } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,6 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [yachts, setYachts] = useState<Yacht[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [waterSports, setWaterSports] = useState<any[]>([]);
@@ -48,14 +46,6 @@ const AdminDashboard = () => {
       )
       .subscribe();
 
-    const bookingsChannel = supabase
-      .channel('admin-bookings-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
-        () => loadData()
-      )
-      .subscribe();
 
     const promotionsChannel = supabase
       .channel('admin-promotions-changes')
@@ -68,7 +58,7 @@ const AdminDashboard = () => {
 
     return () => {
       supabase.removeChannel(yachtsChannel);
-      supabase.removeChannel(bookingsChannel);
+      
       supabase.removeChannel(promotionsChannel);
     };
   }, [user, navigate]);
@@ -76,9 +66,8 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [yachtsData, bookingsData, clientsData, promotionsData] = await Promise.all([
+      const [yachtsData, clientsData, promotionsData] = await Promise.all([
         yachtService.getYachts(),
-        bookingService.getBookings(),
         clientService.getClients(),
         promotionService.getPromotions(),
       ]);
@@ -89,7 +78,6 @@ const AdminDashboard = () => {
       const { data: additionalServicesData } = await supabase.from("additional_services").select("*").order("display_order");
       
       setYachts(yachtsData);
-      setBookings(bookingsData);
       setClients(clientsData);
       setPromotions(promotionsData);
       setWaterSports(waterSportsData || []);
@@ -118,8 +106,7 @@ const AdminDashboard = () => {
     );
   }
 
-  const pendingBookings = bookings.filter((b) => b.status === 'pending').length;
-  const totalAmount = bookings.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0);
+  
 
   return (
     <div className="min-h-screen bg-background">
@@ -142,7 +129,7 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">{t('الإحصائيات', 'Statistics')}</span>
@@ -151,15 +138,7 @@ const AdminDashboard = () => {
               <Ship className="w-4 h-4" />
               <span className="hidden sm:inline">{t('اليخوت', 'Yachts')}</span>
             </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('الحجوزات', 'Bookings')}</span>
-              {pendingBookings > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {pendingBookings}
-                </span>
-              )}
-            </TabsTrigger>
+            
             <TabsTrigger value="water-sports" className="flex items-center gap-2">
               <Ship className="w-4 h-4" />
               <span className="hidden sm:inline">Sports</span>
@@ -185,9 +164,9 @@ const AdminDashboard = () => {
           <TabsContent value="stats" className="space-y-6">
             <DashboardStats
               totalYachts={yachts.length}
-              totalBookings={bookings.length}
-              pendingBookings={pendingBookings}
-              totalClients={totalAmount}
+              totalFood={foodItems.length}
+              totalWaterSports={waterSports.length}
+              totalAdditionalServices={additionalServices.length}
             />
           </TabsContent>
 
@@ -195,9 +174,7 @@ const AdminDashboard = () => {
             <YachtManagement yachts={yachts} onUpdate={loadData} />
           </TabsContent>
 
-          <TabsContent value="bookings">
-            <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
-          </TabsContent>
+          
 
           <TabsContent value="water-sports">
             <WaterSportsManagement activities={waterSports} onUpdate={loadData} />

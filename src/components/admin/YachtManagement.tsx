@@ -47,6 +47,7 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [newYachtImages, setNewYachtImages] = useState<Array<{ file: File; displayOrder: number | null }>>([]);
   const [newMainIndex, setNewMainIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (editingYacht) {
@@ -483,8 +484,17 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3 flex-wrap">
         <h2 className="text-2xl font-bold text-primary">{t('إدارة اليخوت', 'Yacht Management')}</h2>
+        <div className="flex items-center gap-2 ml-auto">
+          <Input
+            placeholder={t('ابحث عن يخت...', 'Search yachts...')}
+            className="w-56"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button variant="outline" onClick={() => setSearchQuery("")}>{t('مسح', 'Clear')}</Button>
+        </div>
         <Button onClick={() => setShowForm(true)} className="bg-gradient-ocean">
           <Plus className="w-4 h-4 ml-2" />
           {t('إضافة يخت جديد', 'Add New Yacht')}
@@ -492,7 +502,19 @@ export const YachtManagement = ({ yachts, onUpdate }: YachtManagementProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {yachts.map((yacht) => {
+        {yachts
+          .filter((yacht) => {
+            const q = searchQuery.trim().toLowerCase();
+            if (!q) return true;
+            const inFeatures = Array.isArray(yacht.features) && yacht.features.some(f => f.toLowerCase().includes(q));
+            return (
+              (yacht.name || '').toLowerCase().includes(q) ||
+              (yacht.description || '').toLowerCase().includes(q) ||
+              (yacht.location || '').toLowerCase().includes(q) ||
+              inFeatures
+            );
+          })
+          .map((yacht) => {
           const images = optionsByYacht[yacht.id] || [];
           return (
             <Card key={yacht.id} className="overflow-hidden">
