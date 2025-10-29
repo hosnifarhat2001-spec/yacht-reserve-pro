@@ -141,12 +141,14 @@ const FoodManagement = ({ foodItems, onUpdate }: FoodManagementProps) => {
               </div>
               <div>
                 <Label>Upload Image</Label>
-                <div className="flex items-center gap-3">
-                  <Input type="file" accept="image/*" onChange={handleImageSelect} disabled={uploading} />
-                  <Button type="button" variant="outline" disabled>
-                    {uploading ? 'Uploading...' : 'Select'}
-                  </Button>
-                </div>
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageSelect} 
+                  disabled={uploading}
+                  className="cursor-pointer"
+                />
+                {uploading && <p className="text-sm text-muted-foreground mt-2">Uploading image...</p>}
                 {formData.image_url && (
                   <div className="mt-3 flex items-center gap-3">
                     <img src={formData.image_url} alt="Preview" className="w-24 h-24 object-cover rounded border" />
