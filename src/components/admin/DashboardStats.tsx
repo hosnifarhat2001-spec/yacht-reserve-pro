@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Ship, UtensilsCrossed, Settings, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Calendar } from '@/components/ui/calendar';
 
 interface DashboardStatsProps {
   totalYachts: number;
@@ -16,6 +18,7 @@ export const DashboardStats = ({
   totalAdditionalServices,
 }: DashboardStatsProps) => {
   const { t } = useLanguage();
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
   const stats = [
     {
@@ -49,20 +52,36 @@ export const DashboardStats = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat) => (
-        <Card key={stat.title} className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-              <p className="text-3xl font-bold">{stat.value}</p>
+    <div className="space-y-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
+          <Card key={stat.title} className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
+                <p className="text-3xl font-bold">{stat.value}</p>
+              </div>
+              <div className={`${stat.bgColor} p-3 rounded-lg`}>
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+              </div>
             </div>
-            <div className={`${stat.bgColor} p-3 rounded-lg`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
-            </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        ))}
+      </div>
+      
+      <Card className="p-6">
+        <h3 className="text-xl font-bold mb-4 text-primary">
+          {t('التقويم', 'Calendar')}
+        </h3>
+        <div className="flex justify-center">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border shadow-sm"
+          />
+        </div>
+      </Card>
     </div>
   );
 };
