@@ -175,6 +175,8 @@ const AdminDashboard = () => {
               totalFood={foodItems.length}
               totalWaterSports={waterSports.length}
               totalAdditionalServices={additionalServices.length}
+              bookings={bookings}
+              yachts={yachts}
             />
           </TabsContent>
 
