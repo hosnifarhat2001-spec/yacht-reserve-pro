@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { YachtCard } from '@/components/YachtCard';
 import { Button } from '@/components/ui/button';
 import { CartSheet } from '@/components/CartSheet';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Waves, Phone, Mail, MapPin } from 'lucide-react';
+import { Waves, Phone, Mail, MapPin, Award, Ship, Smile, Star } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import heroImage from '@/assets/hero-yacht.jpg';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ const Index = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   // WhatsApp contact configuration (loaded from settings for consistency)
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -128,7 +130,7 @@ const Index = () => {
 
 
       {/* Hero Section */}
-      <section id="home" className="relative h-[600px] flex items-center justify-center overflow-hidden mt-20">
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0">
           <img src={heroImage} alt="Luxury Yacht" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40" />
@@ -152,6 +154,36 @@ const Index = () => {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
+      <section className="bg-[#1b1d1f] text-white">
+        <div className="container mx-auto px-4 py-10 text-center">
+          <h3 className="text-sm md:text-base tracking-widest font-semibold text-gray-200 animate-slide-up">
+            {t('الرائدة في دبي وحاصلة على جوائز في تأجير اليخوت', "DUBAI'S LEADING AWARD WINNING YACHT CHARTER")}
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mt-8">
+            <div className="flex flex-col items-center gap-2 animate-slide-up" style={{ animationDelay: '0ms' }}>
+              <Award className="w-10 h-10 text-white/40" />
+              <div className="text-2xl md:text-3xl font-bold">14</div>
+              <div className="text-xs md:text-sm text-white/70">{t('سنوات في العمل', 'Year In Business')}</div>
+            </div>
+            <div className="flex flex-col items-center gap-2 animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <Ship className="w-10 h-10 text-white/40" />
+              <div className="text-2xl md:text-3xl font-bold">30+</div>
+              <div className="text-xs md:text-sm text-white/70">{t('القوارب واليخوت', 'Boats & Yachts')}</div>
+            </div>
+            <div className="flex flex-col items-center gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <Smile className="w-10 h-10 text-white/40" />
+              <div className="text-2xl md:text-3xl font-bold">500000+</div>
+              <div className="text-xs md:text-sm text-white/70">{t('عملاء سعداء', 'Happy Clients')}</div>
+            </div>
+            <div className="flex flex-col items-center gap-2 animate-slide-up" style={{ animationDelay: '300ms' }}>
+              <Star className="w-10 h-10 text-white/40" />
+              <div className="text-2xl md:text-3xl font-bold">5★</div>
+              <div className="text-xs md:text-sm text-white/70">{t('معايير الخدمة', 'Service Standards')}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Yachts Section */}
       <section id="yachts" className="container mx-auto px-4 py-20">
         <div className="text-center mb-12 animate-slide-up">
@@ -173,7 +205,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-            {yachts.map((yacht, index) => {
+            {yachts.slice(0, 3).map((yacht, index) => {
               // Find active promotion for this specific yacht or global promotions
               const yachtPromo = promotions.find(
                 (p) => p.is_active &&
@@ -192,6 +224,17 @@ const Index = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+        {yachts.length > 3 && (
+          <div className="mt-10 text-center">
+            <Button
+              size="lg"
+              className="bg-gradient-gold hover:opacity-90 text-foreground"
+              onClick={() => navigate('/fleet')}
+            >
+              {t('عرض المزيد', 'Show more')}
+            </Button>
           </div>
         )}
       </section>
@@ -229,12 +272,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="opacity-90">{t('© 2025 تأجير اليخوت الفاخرة. جميع الحقوق محفوظة.', '© 2025 Luxury Yacht Rentals. All rights reserved.')}</p>
-        </div>
-      </footer>
     </div>
   );
 };

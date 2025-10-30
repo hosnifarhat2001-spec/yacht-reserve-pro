@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Phone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import asfarLogo from '@/assets/asfar-logo.png';
+import asfarLogo from '@/assets/logo1.png';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { settingsService } from '@/lib/storage';
 
@@ -74,7 +74,7 @@ export const Navigation = (_props: {}) => {
             {t('الرئيسية', 'Home')}
           </button>
           <button
-            onClick={() => handleScroll('yachts')}
+            onClick={() => navigate('/fleet')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >
             {t('اليخوت', 'Fleet')}
@@ -147,7 +147,7 @@ export const Navigation = (_props: {}) => {
               {t('الرئيسية', 'Home')}
             </button>
             <button
-              onClick={() => handleScroll('yachts')}
+              onClick={() => navigate('/fleet')}
               className="text-primary-foreground text-left font-medium hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2"
             >
               {t('اليخوت', 'Fleet')}
