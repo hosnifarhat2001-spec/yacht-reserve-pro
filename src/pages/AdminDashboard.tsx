@@ -10,6 +10,8 @@ import { SettingsManagement } from '@/components/admin/SettingsManagement';
 import WaterSportsManagement from '@/components/admin/WaterSportsManagement';
 import FoodManagement from '@/components/admin/FoodManagement';
 import AdditionalServicesManagement from '@/components/admin/AdditionalServicesManagement';
+import { BookingManagement } from '@/components/admin/BookingManagement';
+import { BookingForm } from '@/components/admin/BookingForm';
 import { yachtService, clientService, promotionService } from '@/lib/storage';
 import { Yacht, Client, Promotion } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +25,7 @@ const AdminDashboard = () => {
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [waterSports, setWaterSports] = useState<any[]>([]);
   const [foodItems, setFoodItems] = useState<any[]>([]);
   const [additionalServices, setAdditionalServices] = useState<any[]>([]);
@@ -72,10 +75,11 @@ const AdminDashboard = () => {
         promotionService.getPromotions(),
       ]);
       
-      // Load water sports, food items, and additional services
+      // Load water sports, food items, additional services, and bookings
       const { data: waterSportsData } = await supabase.from("water_sports").select("*").order("display_order");
       const { data: foodItemsData } = await supabase.from("food_items").select("*").order("display_order");
       const { data: additionalServicesData } = await supabase.from("additional_services").select("*").order("display_order");
+      const { data: bookingsData } = await supabase.from("bookings").select("*").order("created_at", { ascending: false });
       
       setYachts(yachtsData);
       setClients(clientsData);
@@ -83,6 +87,7 @@ const AdminDashboard = () => {
       setWaterSports(waterSportsData || []);
       setFoodItems(foodItemsData || []);
       setAdditionalServices(additionalServicesData || []);
+      setBookings(bookingsData || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -129,16 +134,19 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 lg:w-auto">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">{t('الإحصائيات', 'Statistics')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="bookings" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('الحجوزات', 'Bookings')}</span>
             </TabsTrigger>
             <TabsTrigger value="yachts" className="flex items-center gap-2">
               <Ship className="w-4 h-4" />
               <span className="hidden sm:inline">{t('اليخوت', 'Yachts')}</span>
             </TabsTrigger>
-            
             <TabsTrigger value="water-sports" className="flex items-center gap-2">
               <Ship className="w-4 h-4" />
               <span className="hidden sm:inline">Sports</span>
@@ -167,14 +175,19 @@ const AdminDashboard = () => {
               totalFood={foodItems.length}
               totalWaterSports={waterSports.length}
               totalAdditionalServices={additionalServices.length}
+              bookings={bookings}
+              yachts={yachts}
             />
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-6">
+            <BookingForm yachts={yachts} onSuccess={loadData} />
+            <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
           </TabsContent>
 
           <TabsContent value="yachts">
             <YachtManagement yachts={yachts} onUpdate={loadData} />
           </TabsContent>
-
-          
 
           <TabsContent value="water-sports">
             <WaterSportsManagement activities={waterSports} onUpdate={loadData} />

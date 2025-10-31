@@ -94,55 +94,106 @@ export type Database = {
       }
       bookings: {
         Row: {
+          address: string | null
+          apply_vat: boolean | null
           booking_source: string | null
+          country: string | null
+          coupon_code: string | null
           created_at: string
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          discount: number | null
           duration_type: string | null
           duration_value: number | null
           end_date: string
+          fine_penalty: number | null
+          first_name: string | null
           id: string
+          last_name: string | null
           notes: string | null
+          number_of_persons: number | null
+          other_charges: number | null
+          rate_per_hour: number | null
           start_date: string
           status: string | null
+          supplier_extra_payable: number | null
+          supplier_yacht_payable: number | null
+          title: string | null
           total_price: number
+          trip_end_time: string | null
+          trip_start_time: string | null
+          trip_type: string | null
           updated_at: string
           user_id: string
           yacht_id: string
         }
         Insert: {
+          address?: string | null
+          apply_vat?: boolean | null
           booking_source?: string | null
+          country?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          discount?: number | null
           duration_type?: string | null
           duration_value?: number | null
           end_date: string
+          fine_penalty?: number | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           notes?: string | null
+          number_of_persons?: number | null
+          other_charges?: number | null
+          rate_per_hour?: number | null
           start_date: string
           status?: string | null
+          supplier_extra_payable?: number | null
+          supplier_yacht_payable?: number | null
+          title?: string | null
           total_price: number
+          trip_end_time?: string | null
+          trip_start_time?: string | null
+          trip_type?: string | null
           updated_at?: string
           user_id: string
           yacht_id: string
         }
         Update: {
+          address?: string | null
+          apply_vat?: boolean | null
           booking_source?: string | null
+          country?: string | null
+          coupon_code?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          discount?: number | null
           duration_type?: string | null
           duration_value?: number | null
           end_date?: string
+          fine_penalty?: number | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           notes?: string | null
+          number_of_persons?: number | null
+          other_charges?: number | null
+          rate_per_hour?: number | null
           start_date?: string
           status?: string | null
+          supplier_extra_payable?: number | null
+          supplier_yacht_payable?: number | null
+          title?: string | null
           total_price?: number
+          trip_end_time?: string | null
+          trip_start_time?: string | null
+          trip_type?: string | null
           updated_at?: string
           user_id?: string
           yacht_id?: string
