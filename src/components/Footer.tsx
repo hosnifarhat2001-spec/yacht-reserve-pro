@@ -4,28 +4,28 @@ import asfarLogo from '@/assets/logo1.png';
 export const Footer = () => {
   return (
     <footer className="bg-[#121416] text-gray-300 border-t border-white/10">
-      <div className="container mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="container mx-auto px-4 py-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 items-start">
         <div className="space-y-4 lg:col-span-2">
-          <div className="flex items-center gap-2">
-            <img src={asfarLogo} alt="Asfar" className="h-50 lg:h-48 w-auto" />
-            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">asfaryacht<span className="text-orange-500">.com</span></span>
+          <div className="flex items-center gap-3">
+            <img src={asfarLogo} alt="Asfar" className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto" />
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white">asfaryacht<span className="text-orange-500">.com</span></span>
           </div>
-          <p className="text-xs leading-5">
+          <p className="text-sm md:text-xs leading-6 md:leading-5">
             It's Time For Luxury Yachts Charter. Asfar Yachts is the luxury yacht charter specialist in the Middle East. We have been helping to create unforgettable yacht charters.
           </p>
-          <div className="flex items-center gap-2 text-white/90">
-            <a href="#" aria-label="Instagram" className="hover:text-white/70"><Instagram size={16} /></a>
-            <a href="#" aria-label="Facebook" className="hover:text-white/70"><Facebook size={16} /></a>
-            <a href="#" aria-label="Twitter" className="hover:text-white/70"><Twitter size={16} /></a>
-            <a href="#" aria-label="YouTube" className="hover:text-white/70"><Youtube size={16} /></a>
-            <a href="#" aria-label="LinkedIn" className="hover:text-white/70"><Linkedin size={16} /></a>
+          <div className="flex items-center gap-3 text-white/90">
+            <a href="#" aria-label="Instagram" className="hover:text-white/70 p-2 rounded-md"><Instagram size={16} /></a>
+            <a href="#" aria-label="Facebook" className="hover:text-white/70 p-2 rounded-md"><Facebook size={16} /></a>
+            <a href="#" aria-label="Twitter" className="hover:text-white/70 p-2 rounded-md"><Twitter size={16} /></a>
+            <a href="#" aria-label="YouTube" className="hover:text-white/70 p-2 rounded-md"><Youtube size={16} /></a>
+            <a href="#" aria-label="LinkedIn" className="hover:text-white/70 p-2 rounded-md"><Linkedin size={16} /></a>
           </div>
           <div className="pt-2 text-[10px] text-white/60">
             100% SECURED BY <span className="font-semibold text-white">GlobalSign</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 md:col-span-1 lg:col-span-2">
+        <div className="grid grid-cols-2 gap-6 sm:col-span-1 lg:col-span-2">
           <div>
             <h3 className="text-white font-semibold mb-2 text-sm">Asfar Yachts</h3>
             <ul className="space-y-1.5 text-xs">
@@ -68,7 +68,7 @@ export const Footer = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="text-right text-[10px] text-white/70">WE ACCEPT</div>
+          <div className="text-left md:text-right text-[10px] text-white/70">WE ACCEPT</div>
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* VISA */}
             <div className="bg-white rounded-md px-2 py-1 flex items-center shadow-sm">
@@ -113,7 +113,7 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container mx-auto px-4 py-3 text-center text-[10px] text-white/60">
+        <div className="container mx-auto px-4 py-4 text-center text-[10px] text-white/60">
           © {new Date().getFullYear()} Asfar Yacht. All rights reserved.
         </div>
       </div>
