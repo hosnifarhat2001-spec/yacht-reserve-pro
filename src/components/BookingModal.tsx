@@ -20,6 +20,11 @@ interface BookingModalProps {
   yacht: Yacht;
   open: boolean;
   onClose: () => void;
+  selectedExtras?: {
+    waterSports?: Array<{ name: string; duration: '30' | '60'; price?: number }>;
+    food?: Array<{ name: string; quantity: number; pricePerPerson?: number }>;
+    additionalServices?: Array<{ name: string; price?: number }>;
+  };
 }
 
 // Zod validation schema for booking form inputs
@@ -44,7 +49,7 @@ const bookingSchema = z.object({
     .max(72, 'Maximum 72 hours')
 });
 
-export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
+export const BookingModal = ({ yacht, open, onClose, selectedExtras }: BookingModalProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const [customerName, setCustomerName] = useState('');
@@ -119,6 +124,27 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
       const option = availableOptions.find(o => o.id === id);
       return option ? `  • ${option.name}: ${option.price} AED` : '';
     }).filter(Boolean).join('\n');
+    const extraLines: string[] = [];
+    if (selectedExtras) {
+      if (selectedExtras.waterSports && selectedExtras.waterSports.length > 0) {
+        extraLines.push('Water Sports:');
+        selectedExtras.waterSports.forEach(ws => {
+          extraLines.push(`  • ${ws.name} - ${ws.duration === '30' ? '30 min' : '1 hour'}${typeof ws.price === 'number' ? `: ${ws.price} AED` : ''}`);
+        });
+      }
+      if (selectedExtras.food && selectedExtras.food.length > 0) {
+        extraLines.push('Food:');
+        selectedExtras.food.forEach(f => {
+          extraLines.push(`  • ${f.name} x ${f.quantity}${typeof f.pricePerPerson === 'number' ? `: ${f.pricePerPerson} AED/person` : ''}`);
+        });
+      }
+      if (selectedExtras.additionalServices && selectedExtras.additionalServices.length > 0) {
+        extraLines.push('Additional Services:');
+        selectedExtras.additionalServices.forEach(s => {
+          extraLines.push(`  • ${s.name}${typeof s.price === 'number' ? `: ${s.price} AED` : ''}`);
+        });
+      }
+    }
     
     const message = encodeURIComponent(
       `Hello! I want to book the yacht "${yacht.name}"\n\n` +
@@ -129,6 +155,7 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
       `- Duration: ${hours} ${t('ساعات', 'hours')}\n` +
       `- Hourly Rate: ${yacht.price_per_hour} AED\n` +
       (selectedOptionsText ? `\nSelected Options:\n${selectedOptionsText}\n` : '') +
+      (extraLines.length > 0 ? `\nSelected Extras:\n${extraLines.join('\n')}\n` : '') +
       `- Total Price: ${price} AED\n` +
       `- Location: ${yacht.location || 'Not specified'}\n\n` +
       `Please confirm availability and payment details.`
@@ -511,6 +538,49 @@ export const BookingModal = ({ yacht, open, onClose }: BookingModalProps) => {
                         </div>
                       ) : null;
                     })}
+                  </div>
+                )}
+                {selectedExtras && (
+                  <div className="border-t pt-2 mt-2 space-y-2">
+                    {(selectedExtras.waterSports && selectedExtras.waterSports.length > 0) && (
+                      <div>
+                        <p className="font-medium mb-1">{t('الرياضات البحرية:', 'Water Sports:')}</p>
+                        {selectedExtras.waterSports.map((ws, idx) => (
+                          <div key={`ws-${idx}`} className="flex justify-between text-xs ml-2">
+                            <span>• {ws.name} — {ws.duration === '30' ? t('30 دقيقة', '30 min') : t('ساعة واحدة', '1 hour')}</span>
+                            {typeof ws.price === 'number' && (
+                              <span>{ws.price} {t('درهم', 'AED')}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(selectedExtras.food && selectedExtras.food.length > 0) && (
+                      <div>
+                        <p className="font-medium mb-1">{t('الطعام:', 'Food:')}</p>
+                        {selectedExtras.food.map((f, idx) => (
+                          <div key={`food-${idx}`} className="flex justify-between text-xs ml-2">
+                            <span>• {f.name} × {f.quantity}</span>
+                            {typeof f.pricePerPerson === 'number' && (
+                              <span>{f.pricePerPerson} {t('درهم', 'AED')}/{t('شخص', 'person')}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(selectedExtras.additionalServices && selectedExtras.additionalServices.length > 0) && (
+                      <div>
+                        <p className="font-medium mb-1">{t('خدمات إضافية:', 'Additional Services:')}</p>
+                        {selectedExtras.additionalServices.map((s, idx) => (
+                          <div key={`add-${idx}`} className="flex justify-between text-xs ml-2">
+                            <span>• {s.name}</span>
+                            {typeof s.price === 'number' && (
+                              <span>{s.price} {t('درهم', 'AED')}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between border-t pt-2 mt-2">

@@ -4,6 +4,8 @@ import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BookingModal } from '@/components/BookingModal';
 import { Yacht, Promotion, YachtOption } from '@/types';
@@ -32,6 +34,15 @@ const YachtDetails = () => {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Category datasets loaded from DB
+  const [waterSports, setWaterSports] = useState<Array<{ id: string; name: string; price_30min?: number | null; price_60min?: number | null }>>([]);
+  const [foodItems, setFoodItems] = useState<Array<{ id: string; name: string; price_per_person?: number }>>([]);
+  const [additionalServices, setAdditionalServices] = useState<Array<{ id: string; name: string; price?: number }>>([]);
+  // Local UI selections
+  const [selectedWater, setSelectedWater] = useState<Record<string, boolean>>({});
+  const [waterDuration, setWaterDuration] = useState<Record<string, '30' | '60'>>({});
+  const [foodQty, setFoodQty] = useState<Record<string, number>>({});
+  const [selectedAdds, setSelectedAdds] = useState<Record<string, boolean>>({});
 
   const activePromotion = useMemo(() => {
     const now = new Date();
@@ -42,6 +53,56 @@ const YachtDetails = () => {
 
   const freeOptions = useMemo(() => options.filter((o) => !o.price || o.price === 0), [options]);
   const paidOptions = useMemo(() => options.filter((o) => o.price && o.price > 0), [options]);
+
+  // Compute selected extras to pass into BookingModal
+  const selectedWaterExtras = useMemo(() => {
+    return waterSports
+      .filter((ws) => selectedWater[ws.id])
+      .map((ws) => {
+        const duration = waterDuration[ws.id] || '60';
+        const price = duration === '30' ? (ws.price_30min ?? undefined) : (ws.price_60min ?? undefined);
+        return { name: ws.name, duration: duration as '30' | '60', price };
+      });
+  }, [waterSports, selectedWater, waterDuration]);
+
+  const selectedFoodExtras = useMemo(() => {
+    return foodItems
+      .map((f) => ({ name: f.name, quantity: foodQty[f.id] ?? 0, pricePerPerson: f.price_per_person }))
+      .filter((f) => f.quantity > 0);
+  }, [foodItems, foodQty]);
+
+  const selectedAdditionalServicesExtras = useMemo(() => {
+    return additionalServices
+      .filter((s) => selectedAdds[s.id])
+      .map((s) => ({ name: s.name, price: s.price }));
+  }, [additionalServices, selectedAdds]);
+
+  // Direct WhatsApp URL including selected extras (no personal details here)
+  const directWhatsAppUrl = useMemo(() => {
+    const lines: string[] = [];
+    lines.push(`I want to book the yacht: ${yacht?.name ?? ''}`);
+    if (selectedWaterExtras.length > 0) {
+      lines.push('\nWater Sports:');
+      selectedWaterExtras.forEach(ws => {
+        const durText = ws.duration === '30' ? '30 min' : '1 hour';
+        lines.push(`  • ${ws.name} — ${durText}${typeof ws.price === 'number' ? `: ${ws.price} AED` : ''}`);
+      });
+    }
+    if (selectedFoodExtras.length > 0) {
+      lines.push('\nFood:');
+      selectedFoodExtras.forEach(f => {
+        lines.push(`  • ${f.name} × ${f.quantity}${typeof f.pricePerPerson === 'number' ? `: ${f.pricePerPerson} AED/person` : ''}`);
+      });
+    }
+    if (selectedAdditionalServicesExtras.length > 0) {
+      lines.push('\nAdditional Services:');
+      selectedAdditionalServicesExtras.forEach(s => {
+        lines.push(`  • ${s.name}${typeof s.price === 'number' ? `: ${s.price} AED` : ''}`);
+      });
+    }
+    const text = encodeURIComponent(lines.join('\n'));
+    return whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${text}` : '#';
+  }, [whatsappNumber, yacht?.name, selectedWaterExtras, selectedFoodExtras, selectedAdditionalServicesExtras]);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -55,12 +116,24 @@ const YachtDetails = () => {
         setYacht(yachtData || null);
         setPromotions(promData || []);
 
-        const [{ data: imgs }, { data: opts }] = await Promise.all([
+        const [
+          { data: imgs },
+          { data: opts },
+          { data: ws },
+          { data: foods },
+          { data: services },
+        ] = await Promise.all([
           supabase.from('yacht_images').select('id,image_url').eq('yacht_id', id).order('display_order'),
           supabase.from('yacht_options').select('*').eq('yacht_id', id).eq('is_active', true).order('display_order'),
+          supabase.from('water_sports').select('id,name,price_30min,price_60min').eq('is_active', true).order('display_order'),
+          supabase.from('food_items').select('id,name,price_per_person').eq('is_active', true).order('display_order'),
+          supabase.from('additional_services').select('id,name,price').eq('is_active', true).order('display_order'),
         ]);
         setImages(imgs || []);
         setOptions(opts as YachtOption[] || []);
+        setWaterSports((ws as any[]) || []);
+        setFoodItems((foods as any[]) || []);
+        setAdditionalServices((services as any[]) || []);
       } catch (e) {
         console.error('Failed to load yacht details', e);
         toast.error(t('فشل تحميل تفاصيل اليخت', 'Failed to load yacht details'));
@@ -83,6 +156,18 @@ const YachtDetails = () => {
       .channel('yacht-details-options')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'yacht_options', filter: `yacht_id=eq.${id}` }, () => loadAll())
       .subscribe();
+    const wsChannel = supabase
+      .channel('yacht-details-watersports')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'water_sports' }, () => loadAll())
+      .subscribe();
+    const foodsChannel = supabase
+      .channel('yacht-details-foods')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'food_items' }, () => loadAll())
+      .subscribe();
+    const addSrvChannel = supabase
+      .channel('yacht-details-additional-services')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'additional_services' }, () => loadAll())
+      .subscribe();
     const promosChannel = supabase
       .channel('yacht-details-promotions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => loadAll())
@@ -93,6 +178,9 @@ const YachtDetails = () => {
       supabase.removeChannel(imagesChannel);
       supabase.removeChannel(optionsChannel);
       supabase.removeChannel(promosChannel);
+      supabase.removeChannel(wsChannel);
+      supabase.removeChannel(foodsChannel);
+      supabase.removeChannel(addSrvChannel);
     };
   }, [id, t]);
 
@@ -247,7 +335,7 @@ const YachtDetails = () => {
                     </Button>
                     {whatsappNumber && (
                       <Button asChild size="sm" variant="outline">
-                        <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">
+                        <a href={directWhatsAppUrl} target="_blank" rel="noopener noreferrer">
                           {t('واتساب', 'WhatsApp')}
                         </a>
                       </Button>
@@ -296,6 +384,127 @@ const YachtDetails = () => {
             </Card>
           </div>
 
+          {/* Additional categories shown under Read More (Yacht description) */
+          // Loaded from DB tables: water_sports, food_items, additional_services
+          }
+          <div className="lg:col-span-2 order-4">
+            <Card className="p-6 space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold">{t('الرياضات البحرية', 'Water Sports')}</h4>
+                <div className="space-y-3 text-sm">
+                  {waterSports.map((ws) => {
+                    const checked = !!selectedWater[ws.id];
+                    const dur = waterDuration[ws.id] || '60';
+                    const price = dur === '30' ? (ws.price_30min ?? 0) : (ws.price_60min ?? 0);
+                    return (
+                      <div key={ws.id} className="rounded-md border p-3">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <label className="flex items-center gap-2">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                setSelectedWater((prev) => ({ ...prev, [ws.id]: !!v }));
+                                if (!waterDuration[ws.id]) setWaterDuration((prev) => ({ ...prev, [ws.id]: '60' }));
+                              }}
+                            />
+                            <span className="font-medium">{t(ws.name, ws.name)}</span>
+                          </label>
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                            <div className="min-w-[160px]">
+                              <Select
+                                value={dur}
+                                onValueChange={(val) => setWaterDuration((prev) => ({ ...prev, [ws.id]: val as '30' | '60' }))}
+                                disabled={!checked}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('اختر المدة', 'Select duration')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="30">{t('30 دقيقة', '30 min')}</SelectItem>
+                                  <SelectItem value="60">{t('ساعة واحدة', '1 hour')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="font-semibold text-foreground">AED {Number(price).toFixed(0)}</span>
+                              <span className="ml-1">{dur === '30' ? t('لكل 30 دقيقة', '/ 30 min') : t('لكل ساعة', '/ hour')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold">{t('الطعام', 'Food')}</h4>
+                <div className="space-y-3 text-sm">
+                  {foodItems.map((f) => {
+                    const qty = foodQty[f.id] ?? 0;
+                    const price = f.price_per_person ?? 0;
+                    return (
+                      <div key={f.id} className="rounded-md border p-3">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{t(f.name, f.name)}</span>
+                          </div>
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                            <div className="min-w-[120px]">
+                              <Select
+                                value={String(qty)}
+                                onValueChange={(val) => setFoodQty((prev) => ({ ...prev, [f.id]: Number(val) }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('الكمية', 'Quantity')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[...Array(11)].map((_, i) => (
+                                    <SelectItem key={i} value={String(i)}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="font-semibold text-foreground">AED {Number(price).toFixed(0)}</span>
+                              <span className="ml-1">{t('لكل شخص', 'per person')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold">{t('خدمات إضافية', 'Additional Services')}</h4>
+                <div className="space-y-3 text-sm">
+                  {additionalServices.map((s) => {
+                    const checked = !!selectedAdds[s.id];
+                    const price = s.price ?? 0;
+                    return (
+                      <div key={s.id} className="rounded-md border p-3">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <label className="flex items-center gap-2">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => setSelectedAdds((prev) => ({ ...prev, [s.id]: !!v }))}
+                            />
+                            <span className="font-medium">{t(s.name, s.name)}</span>
+                          </label>
+                          <div className="text-muted-foreground">
+                            <span className="font-semibold text-foreground">AED {Number(price).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          </div>
+
           <div className="order-4 lg:order-3 lg:col-span-1 lg:col-start-3 block lg:hidden">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between">
@@ -308,7 +517,7 @@ const YachtDetails = () => {
                 </Button>
                 {whatsappNumber && (
                   <Button asChild size="sm" variant="outline">
-                    <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">
+                    <a href={directWhatsAppUrl} target="_blank" rel="noopener noreferrer">
                       {t('واتساب', 'WhatsApp')}
                     </a>
                   </Button>
@@ -319,7 +528,16 @@ const YachtDetails = () => {
         </div>
       </section>
 
-      <BookingModal yacht={yacht} open={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <BookingModal
+        yacht={yacht}
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        selectedExtras={{
+          waterSports: selectedWaterExtras,
+          food: selectedFoodExtras,
+          additionalServices: selectedAdditionalServicesExtras,
+        }}
+      />
     </div>
   );
 };
