@@ -7,7 +7,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 items-start">
         <div className="space-y-4 lg:col-span-2">
           <div className="flex items-center gap-3">
-            <img src={asfarLogo} alt="Asfar" className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto" />
+            <img src={asfarLogo} alt="Asfar" className="h-40 sm:h-14 md:h-16 lg:h-60 w-auto" />
             <span className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white">asfaryacht<span className="text-orange-500">.com</span></span>
           </div>
           <p className="text-sm md:text-xs leading-6 md:leading-5">

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LogOut, Ship, Calendar, Tag, BarChart, Settings } from 'lucide-react';
+import { BarChart, Calendar, Clock, Home, Layers, LogOut, Settings, Ship, Tag, Users, Utensils, Gift, Activity } from 'lucide-react';
 import { YachtManagement } from '@/components/admin/YachtManagement';
 import { PromotionsManagement } from '@/components/admin/PromotionsManagement';
 import { DashboardStats } from '@/components/admin/DashboardStats';
@@ -151,19 +151,19 @@ const AdminDashboard = () => {
               <span className="hidden sm:inline">{t('اليخوت', 'Yachts')}</span>
             </TabsTrigger>
             <TabsTrigger value="water-sports" className="flex items-center gap-2">
-              <Ship className="w-4 h-4" />
+              <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Sports</span>
             </TabsTrigger>
             <TabsTrigger value="food" className="flex items-center gap-2">
-              <Tag className="w-4 h-4" />
+              <Utensils className="w-4 h-4" />
               <span className="hidden sm:inline">Food</span>
             </TabsTrigger>
             <TabsTrigger value="additional-services" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
+              <Layers className="w-4 h-4" />
               <span className="hidden sm:inline">Services</span>
             </TabsTrigger>
             <TabsTrigger value="promotions" className="flex items-center gap-2">
-              <Tag className="w-4 h-4" />
+              <Gift className="w-4 h-4" />
               <span className="hidden sm:inline">{t('العروض', 'Promotions')}</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">

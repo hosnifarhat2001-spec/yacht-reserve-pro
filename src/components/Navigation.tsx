@@ -98,6 +98,12 @@ export const Navigation = (_props: {}) => {
             {t('خدمات إضافية', 'Additional Services')}
           </button>
           <button
+            onClick={() => navigate('/bookings-calendar')}
+            className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
+          >
+            {t('حجوزاتي', 'My Bookings')}
+          </button>
+          <button
             onClick={() => handleScroll('contact')}
             className="text-primary-foreground hover:text-primary-foreground/80 hover:underline underline-offset-8 decoration-2 font-medium transition-colors"
           >

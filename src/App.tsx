@@ -16,6 +16,9 @@ import AdditionalServices from "./pages/AdditionalServices";
 import ServiceCart from "./pages/ServiceCart";
 import NotFound from "./pages/NotFound";
 import Fleet from "./pages/Fleet";
+import YachtManagement from "./pages/YachtManagement";
+import BookingManagement from "./pages/BookingManagement";
+import BookingsCalendar from "./pages/BookingsCalendar";
 import { Footer } from "@/components/Footer";
 
 const queryClient = new QueryClient();
@@ -43,6 +46,9 @@ const App = () => (
               <Route path="/additional-services" element={<AdditionalServices />} />
               <Route path="/cart" element={<ServiceCart />} />
               <Route path="/fleet" element={<Fleet />} />
+              <Route path="/yacht-management" element={<YachtManagement />} />
+              <Route path="/booking-management" element={<BookingManagement />} />
+              <Route path="/bookings-calendar" element={<BookingsCalendar />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
