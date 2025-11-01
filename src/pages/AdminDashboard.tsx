@@ -18,6 +18,7 @@ import { Yacht, Client, Promotion } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -183,14 +184,6 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-primary">{t('إدارة الحجوزات', 'Booking Management')}</h2>
-              <Button onClick={() => setShowBookingForm(true)} className="bg-gradient-ocean">
-                <Calendar className="w-4 h-4 ml-2" />
-                {t('حجز جديد', 'Create New Booking')}
-              </Button>
-            </div>
-            
             <Dialog open={showBookingForm} onOpenChange={(open) => !open && setShowBookingForm(false)}>
               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
@@ -207,7 +200,16 @@ const AdminDashboard = () => {
               </DialogContent>
             </Dialog>
             
-            <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
+            <BookingManagement 
+              bookings={bookings} 
+              yachts={yachts} 
+              onUpdate={loadData}
+              onCreateNew={() => setShowBookingForm(true)}
+              onEdit={(booking) => {
+                // TODO: Implement edit functionality
+                toast.info(t('جاري تطوير وظيفة التعديل', 'Edit functionality coming soon'));
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="yachts">

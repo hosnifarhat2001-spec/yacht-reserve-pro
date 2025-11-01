@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Trash2, Calendar, User, Phone, Mail, MessageCircle, Clock, Ship } from 'lucide-react';
+import { Trash2, Calendar, User, Phone, Mail, MessageCircle, Clock, Ship, Edit, Plus } from 'lucide-react';
 import { bookingService } from '@/lib/storage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,9 +14,11 @@ interface BookingManagementProps {
   bookings: Booking[];
   yachts: Yacht[];
   onUpdate: () => void;
+  onEdit?: (booking: Booking) => void;
+  onCreateNew?: () => void;
 }
 
-export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagementProps) => {
+export const BookingManagement = ({ bookings, yachts, onUpdate, onEdit, onCreateNew }: BookingManagementProps) => {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [bookingOptionsById, setBookingOptionsById] = useState<Record<string, { option_name: string; option_price: number }[]>>({});
@@ -125,16 +127,27 @@ export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagem
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-primary">
-        {t('إدارة الحجوزات', 'Booking Management')}
-      </h2>
-
-      <div>
-        <Input
-          placeholder={t('ابحث في الحجوزات...', 'Search bookings...')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h2 className="text-2xl font-bold text-primary">
+          {t('إدارة الحجوزات', 'Booking Management')}
+        </h2>
+        <div className="flex items-center gap-2 ml-auto">
+          <Input
+            placeholder={t('ابحث في الحجوزات...', 'Search bookings...')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-56"
+          />
+          <Button variant="outline" onClick={() => setSearch('')}>
+            {t('مسح', 'Clear')}
+          </Button>
+        </div>
+        {onCreateNew && (
+          <Button onClick={onCreateNew} className="bg-gradient-ocean">
+            <Plus className="w-4 h-4 ml-2" />
+            {t('حجز جديد', 'Create New Booking')}
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -201,6 +214,16 @@ export const BookingManagement = ({ bookings, yachts, onUpdate }: BookingManagem
                       {t('رفض', 'Reject')}
                     </Button>
                   </>
+                )}
+                {onEdit && (
+                  <Button
+                    onClick={() => onEdit(booking)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Edit className="w-4 h-4 ml-1" />
+                    {t('تعديل', 'Edit')}
+                  </Button>
                 )}
                 <Button
                   onClick={() => handleDelete(booking.id)}
