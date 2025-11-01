@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LogOut, Ship, Calendar, Tag, BarChart, Settings } from 'lucide-react';
 import { YachtManagement } from '@/components/admin/YachtManagement';
 import { PromotionsManagement } from '@/components/admin/PromotionsManagement';
@@ -184,20 +185,27 @@ const AdminDashboard = () => {
           <TabsContent value="bookings" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-primary">{t('إدارة الحجوزات', 'Booking Management')}</h2>
-              <Button onClick={() => setShowBookingForm(!showBookingForm)} className="bg-gradient-ocean">
+              <Button onClick={() => setShowBookingForm(true)} className="bg-gradient-ocean">
                 <Calendar className="w-4 h-4 ml-2" />
-                {showBookingForm ? t('إخفاء النموذج', 'Hide Form') : t('حجز جديد', 'Create New Booking')}
+                {t('حجز جديد', 'Create New Booking')}
               </Button>
             </div>
-            {showBookingForm && (
-              <BookingForm 
-                yachts={yachts} 
-                onSuccess={() => {
-                  loadData();
-                  setShowBookingForm(false);
-                }} 
-              />
-            )}
+            
+            <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{t('إنشاء حجز جديد', 'Create New Booking')}</DialogTitle>
+                </DialogHeader>
+                <BookingForm 
+                  yachts={yachts} 
+                  onSuccess={() => {
+                    loadData();
+                    setShowBookingForm(false);
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
+            
             <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
           </TabsContent>
 

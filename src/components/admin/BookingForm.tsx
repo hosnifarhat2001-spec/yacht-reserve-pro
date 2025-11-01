@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -150,12 +149,7 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
   };
 
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold text-primary mb-6">
-        {t('إنشاء حجز جديد', 'Create New Booking')}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer Information */}
         <div>
           <h3 className="text-lg font-semibold mb-4 text-secondary">
@@ -469,6 +463,5 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
           </div>
         </div>
       </form>
-    </Card>
   );
 };
