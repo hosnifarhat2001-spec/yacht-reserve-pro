@@ -31,6 +31,7 @@ const AdminDashboard = () => {
   const [additionalServices, setAdditionalServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('stats');
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -181,7 +182,22 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">
-            <BookingForm yachts={yachts} onSuccess={loadData} />
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-primary">{t('إدارة الحجوزات', 'Booking Management')}</h2>
+              <Button onClick={() => setShowBookingForm(!showBookingForm)} className="bg-gradient-ocean">
+                <Calendar className="w-4 h-4 ml-2" />
+                {showBookingForm ? t('إخفاء النموذج', 'Hide Form') : t('حجز جديد', 'Create New Booking')}
+              </Button>
+            </div>
+            {showBookingForm && (
+              <BookingForm 
+                yachts={yachts} 
+                onSuccess={() => {
+                  loadData();
+                  setShowBookingForm(false);
+                }} 
+              />
+            )}
             <BookingManagement bookings={bookings} yachts={yachts} onUpdate={loadData} />
           </TabsContent>
 
