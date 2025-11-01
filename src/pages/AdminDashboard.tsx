@@ -191,7 +191,7 @@ const AdminDashboard = () => {
               </Button>
             </div>
             
-            <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
+            <Dialog open={showBookingForm} onOpenChange={(open) => !open && setShowBookingForm(false)}>
               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{t('إنشاء حجز جديد', 'Create New Booking')}</DialogTitle>
@@ -201,7 +201,8 @@ const AdminDashboard = () => {
                   onSuccess={() => {
                     loadData();
                     setShowBookingForm(false);
-                  }} 
+                  }}
+                  onCancel={() => setShowBookingForm(false)}
                 />
               </DialogContent>
             </Dialog>

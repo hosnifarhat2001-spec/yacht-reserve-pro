@@ -17,9 +17,10 @@ import { cn } from '@/lib/utils';
 interface BookingFormProps {
   yachts: Yacht[];
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
+export const BookingForm = ({ yachts, onSuccess, onCancel }: BookingFormProps) => {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
@@ -149,12 +150,12 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Customer Information */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-secondary">
-            {t('معلومات العميل', 'Customer Information')}
-          </h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Customer Information */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-primary">
+          {t('معلومات العميل', 'Customer Information')}
+        </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="title">{t('اللقب', 'Title')}</Label>
@@ -233,11 +234,11 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
           </div>
         </div>
 
-        {/* Trip Information */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-secondary">
-            {t('معلومات الرحلة', 'Trip Information')}
-          </h3>
+      {/* Trip Information */}
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold mb-4 text-primary">
+          {t('معلومات الرحلة', 'Trip Information')}
+        </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="yacht_id">{t('اليخت', 'Yacht')} *</Label>
@@ -368,11 +369,11 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
           </div>
         </div>
 
-        {/* Payment Information */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-secondary">
-            {t('معلومات الدفع', 'Payment Information')}
-          </h3>
+      {/* Payment Information */}
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold mb-4 text-primary">
+          {t('معلومات الدفع', 'Payment Information')}
+        </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -450,17 +451,18 @@ export const BookingForm = ({ yachts, onSuccess }: BookingFormProps) => {
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t">
-          <div className="text-xl font-bold text-secondary">
-            {t('المبلغ الإجمالي:', 'Total Amount:')} {calculateTotalPrice().toFixed(2)} AED
+          <div className="text-xl font-bold text-primary">
+            {t('المبلغ الإجمالي:', 'Total Amount:')} {calculateTotalPrice().toFixed(2)} {t('درهم', 'AED')}
           </div>
-          <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={resetForm}>
-              {t('إعادة تعيين', 'Reset')}
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? t('جاري الإنشاء...', 'Creating...') : t('إنشاء حجز', 'Create Booking')}
-            </Button>
-          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <Button type="button" onClick={() => { resetForm(); onCancel?.(); }} variant="outline" className="flex-1">
+            {t('إلغاء', 'Cancel')}
+          </Button>
+          <Button type="submit" disabled={loading} className="flex-1 bg-gradient-ocean">
+            {loading ? t('جاري الإنشاء...', 'Creating...') : t('إنشاء حجز', 'Create Booking')}
+          </Button>
         </div>
       </form>
   );
